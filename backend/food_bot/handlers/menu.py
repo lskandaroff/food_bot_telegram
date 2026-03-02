@@ -42,23 +42,37 @@ async def dish_selected(callback: CallbackQuery):
 
     # Rasm nomini olish
     image_url = dish.get('image')
-    photo_file = None
+    photo_input = None
 
     if image_url:
         if "/media/" in image_url:
             relative_path = unquote(image_url.split("/media/")[-1])
+            # Baza yo'lini aniqlash (backend/media)
             base_dir = Path(__file__).resolve().parent.parent.parent
             local_image_path = base_dir / "media" / relative_path
 
             if local_image_path.exists():
-                photo_file = FSInputFile(local_image_path)
+                photo_input = FSInputFile(local_image_path)
+            elif image_url.startswith("http"):
+                # Agar localda bo'lmasa, URL orqali yuboramiz
+                photo_input = image_url
+        elif image_url.startswith("http"):
+            photo_input = image_url
 
     text = f"🍽 {dish['title']}\n" \
            f"💰 Narxi: {dish['price']}\n" \
            f"📝 Tavsifi: {dish.get('description', 'Yo‘q')}"
 
-    if photo_file:
-        await callback.message.answer_photo(photo=photo_file, caption=text, reply_markup=get_dish_detail_keyboard(dish['id']))
+    if photo_input:
+        try:
+            await callback.message.answer_photo(
+                photo=photo_input, 
+                caption=text, 
+                reply_markup=get_dish_detail_keyboard(dish['id'])
+            )
+        except Exception as e:
+            logging.error(f"Rasm yuborishda xato: {e}")
+            await callback.message.answer(text, reply_markup=get_dish_detail_keyboard(dish['id']))
     else:
         await callback.message.answer(text, reply_markup=get_dish_detail_keyboard(dish['id']))
 
