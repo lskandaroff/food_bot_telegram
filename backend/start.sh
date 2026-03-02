@@ -1,10 +1,7 @@
 #!/bin/bash
 
-# Start Telegram bot in the background
-cd food_bot && python main.py &
+# Start Telegram bot in a subshell (background)
+(cd food_bot && python main.py) &
 
-# Go back to backend root
-cd ..
-
-# Start Django with gunicorn
+# Start Django with gunicorn (stays in backend root)
 gunicorn config.wsgi:application
