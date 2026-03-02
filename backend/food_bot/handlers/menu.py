@@ -45,23 +45,17 @@ async def dish_selected(callback: CallbackQuery):
     photo_file = None
 
     if image_url:
-        print(f"DEBUG: Processing image_url: {image_url}")
         if "/media/" in image_url:
             relative_path = unquote(image_url.split("/media/")[-1])
-            print(f"DEBUG: Decoded relative_path: {relative_path}")
-            # Local media path calculation
             base_dir = Path(__file__).resolve().parent.parent.parent
             local_image_path = base_dir / "media" / relative_path
-            print(f"DEBUG: Local image path: {local_image_path}")
-            print(f"DEBUG: Path exists: {local_image_path.exists()}")
 
             if local_image_path.exists():
                 photo_file = FSInputFile(local_image_path)
 
     text = f"🍽 {dish['title']}\n" \
            f"💰 Narxi: {dish['price']}\n" \
-           f"📝 Tavsifi: {dish.get('description', 'Yo‘q')}\n" \
-           f"📦 Ingredientlar: {', '.join(dish.get('ingredients', []))}"
+           f"📝 Tavsifi: {dish.get('description', 'Yo‘q')}"
 
     if photo_file:
         await callback.message.answer_photo(photo=photo_file, caption=text, reply_markup=get_dish_detail_keyboard(dish['id']))

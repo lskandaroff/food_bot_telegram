@@ -15,16 +15,9 @@ class DishSerializer(serializers.ModelSerializer):
         return obj.image.url if obj.image else None
 
 class MenuSerializer(serializers.ModelSerializer):
-    image = serializers.SerializerMethodField()
     class Meta:
         model = Menu
-        fields = ['id', 'title', 'image']
-
-    def get_image(self, obj):
-        request = self.context.get('request')
-        if request:
-            return request.build_absolute_uri(obj.image.url)  # http://127.0.0.1:8000/media/menus/1.jpg
-        return obj.image.url
+        fields = ['id', 'title']
 
 from .models import Order
 
