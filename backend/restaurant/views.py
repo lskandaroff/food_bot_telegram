@@ -2,8 +2,12 @@
 from rest_framework import generics
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from django.http import HttpResponse
 from .models import Menu, Dish, Order, TelegramUser
 from .serializers import MenuSerializer, DishSerializer, OrderSerializer, TelegramUserSerializer
+
+def health_check(request):
+    return HttpResponse("OK")
 
 class TelegramUserView(generics.RetrieveUpdateAPIView):
     queryset = TelegramUser.objects.all()

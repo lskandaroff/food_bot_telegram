@@ -26,5 +26,34 @@ dp.include_router(start.router)
 dp.include_router(menu.router)
 dp.include_router(cart.router)
 
+import os
+import aiohttp
+
+async def keep_alive():
+    """Serverni uxlab qolmasligi uchun har 10 minutda ping qilib turadi."""
+    url = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
+    if not url:
+        logging.warning("RENDER_EXTERNAL_HOSTNAME topilmadi, keep_alive ishlamaydi.")
+        return
+    
+    ping_url = f"https://{url}/ping/"
+    logging.info(f"Keep-alive boshlandi: {ping_url}")
+    
+    async with aiohttp.ClientSession() as session:
+        while True:
+            try:
+                async with session.get(ping_url) as response:
+                    logging.info(f"Ping yuborildi: {response.status}")
+            except Exception as e:
+                logging.error(f"Ping xatosi: {e}")
+            await asyncio.sleep(600)  # 10 daqiqa
+
+async def main():
+    # Keep-alive vazifasini fonda ishga tushiramiz
+    asyncio.create_task(keep_alive())
+    
+    # Botni ishga tushirish
+    await dp.start_polling(bot)
+
 if __name__ == "__main__":
-    asyncio.run(dp.start_polling(bot))
+    asyncio.run(main())

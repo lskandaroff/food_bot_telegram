@@ -28,4 +28,6 @@ typing_extensions==4.15.0
 tzdata==2025.3
 urllib3==2.6.3
 yarl==1.22.0
+dj-database-url==2.1.0
+psycopg2-binary==2.9.9
 whitenoise==6.9.0

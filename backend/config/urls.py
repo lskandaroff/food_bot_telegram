@@ -18,8 +18,10 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
+from restaurant.views import health_check
 
 urlpatterns = [
+    path('ping/', health_check, name='ping'),
     path('admin/', admin.site.urls),
     path('api/', include('restaurant.urls')),  # shu qator bo‘lishi shart
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
