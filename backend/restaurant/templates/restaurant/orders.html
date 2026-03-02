@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="uz">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Buyurtmalar - Admin</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #0062ff;
+            --primary-hover: #0052d6;
+            --success: #10b981;
+            --success-hover: #059669;
+            --danger: #ef4444;
+            --danger-hover: #dc2626;
+            --warning: #f59e0b;
+            --bg-body: #f8fafc;
+            --bg-card: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            padding: 24px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        h1 {
+            font-size: 24px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .history-link {
+            font-size: 14px;
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 500;
+            padding: 8px 16px;
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+
+        .history-link:hover {
+            background-color: var(--bg-body);
+            border-color: var(--primary);
+        }
+
+        .logout-link {
+            font-size: 14px;
+            color: var(--danger);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .order-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 24px;
+        }
+
+        .order-card {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+            transition: transform 0.2s, box-shadow 0.2s;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .order-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .order-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .order-id {
+            font-weight: 700;
+            font-size: 18px;
+            color: var(--primary);
+        }
+
+        .order-time {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .info-row {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .info-label {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+            font-weight: 700;
+        }
+
+        .info-value {
+            font-size: 15px;
+            font-weight: 500;
+        }
+
+        .products-list {
+            background: #f1f5f9;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            max-height: 100px;
+            overflow-y: auto;
+            white-space: pre-line;
+        }
+
+        .payment-status {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 12px;
+            border-radius: 99px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .payment-cash {
+            background-color: #dcfce7;
+            color: #166534;
+        }
+
+        .payment-card {
+            background-color: #dbeafe;
+            color: #1e40af;
+        }
+
+        .actions {
+            display: flex;
+            gap: 12px;
+            margin-top: auto;
+            padding-top: 16px;
+            border-top: 1px solid var(--border);
+        }
+
+        .btn {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background 0.2s;
+            text-align: center;
+        }
+
+        .btn-success {
+            background-color: var(--success);
+            color: white;
+        }
+
+        .btn-success:hover {
+            background-color: var(--success-hover);
+        }
+
+        .btn-danger {
+            background-color: var(--danger);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background-color: var(--danger-hover);
+        }
+
+        .no-orders {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 60px;
+            background: white;
+            border-radius: 16px;
+            border: 1px dashed var(--border);
+            color: var(--text-muted);
+        }
+
+        @media (max-width: 640px) {
+            .order-grid {
+                grid-template-columns: 1fr;
+            }
+
+            header {
+                flex-direction: column;
+                gap: 16px;
+                align-items: flex-start;
+            }
+
+            .header-actions {
+                width: 100%;
+                justify-content: space-between;
+            }
+        }
+
+        /* Polling animation */
+        .live-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: var(--success);
+            margin-right: 8px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+                opacity: 1;
+            }
+
+            50% {
+                transform: scale(1.5);
+                opacity: 0.5;
+            }
+
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(5px);
+            overflow: auto;
+            padding: 20px;
+        }
+
+        .modal-content {
+            margin: auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            max-width: 600px;
+            width: 100%;
+            margin-top: 40px;
+            position: relative;
+            background: white;
+            padding: 20px;
+            border-radius: 16px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-content img {
+            width: 100%;
+            height: auto;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border: 1px solid var(--border);
+        }
+
+        .close-modal {
+            position: absolute;
+            top: -50px;
+            right: 0;
+            color: white;
+            font-size: 35px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .close-modal:hover {
+            color: #ccc;
+        }
+
+        .modal-actions {
+            width: 100%;
+            display: flex;
+            gap: 12px;
+        }
+
+        .modal-actions .btn {
+            flex: 1;
+            text-decoration: none;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>
+                <span class="live-indicator"></span>
+                Aktiv Buyurtmalar
+            </h1>
+            <div class="header-actions">
+                <a href="{% url 'orders_history' %}" class="history-link">Tarixni ko'rish</a>
+                <a href="/admin/logout/" class="logout-link">Chiqish</a>
+            </div>
+        </header>
+
+        <div id="orders-container" class="order-grid">
+            {% if orders %}
+            {% for order in orders %}
+            <div class="order-card" id="order-{{ order.id }}">
+                <div class="order-header">
+                    <span class="order-id">#{{ order.id }}</span>
+                    <span class="order-time">{{ order.created_at|date:"d.m.Y H:i" }}</span>
+                </div>
+
+                <div class="info-row">
+                    <span class="info-label">Telefon</span>
+                    <span class="info-value">{{ order.phone_number }}</span>
+                </div>
+
+                <div class="info-row">
+                    <span class="info-label">Mahsulotlar</span>
+                    <div class="products-list">{{ order.total_products }}</div>
+                </div>
+
+                <div class="info-row">
+                    <span class="info-label">Umumiy summa</span>
+                    <span class="info-value" style="font-size: 18px; color: var(--text-main); font-weight: 700;">{{
+                        order.total_price }} so'm</span>
+                </div>
+
+                <div class="info-row">
+                    <span class="info-label">Manzil (📍)</span>
+                    <div class="info-value">
+                        {% if order.location_latitude and order.location_longitude %}
+                        <a href="https://www.google.com/maps?q={{ order.location_latitude }},{{ order.location_longitude }}"
+                            target="_blank" style="color: var(--primary); text-decoration: none;">
+                            📍 Google Maps'da ko'rish
+                        </a>
+                        {% elif order.location_text %}
+                        {{ order.location_text }}
+                        {% else %}
+                        <span style="color: var(--text-muted);">Noma'lum</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="info-row">
+                    <span class="info-label">To'lov</span>
+                    <div>
+                        {% if order.payment_type == 'cash' %}
+                        <span class="payment-status payment-cash">Naqd</span>
+                        {% else %}
+                        <span class="payment-status payment-card">Karta</span>
+                        {% if order.payment_receipt %}
+                        <a href="javascript:void(0)"
+                            onclick="openModal('{{ order.payment_receipt.url }}', '{{ order.id }}')"
+                            style="font-size: 12px; margin-left: 8px; color: var(--primary);">Chekni ko'rish</a>
+                        {% endif %}
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="actions">
+                    <form action="{% url 'complete_order' order.id %}" method="post" style="flex: 1;">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-success" style="width: 100%;">Tayyor</button>
+                    </form>
+                    <form action="{% url 'cancel_order' order.id %}" method="post" style="flex: 1;">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger" style="width: 100%;">Bekor</button>
+                    </form>
+                </div>
+            </div>
+            {% endfor %}
+            {% else %}
+            <div class="no-orders" id="no-orders-message">
+                Hozircha aktiv buyurtmalar yo'q.
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Receipt Modal -->
+    <div id="receipt-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <img id="modal-image" src="" alt="Receipt">
+            <div class="modal-actions">
+                <a id="download-btn" href="" download="" class="btn btn-success">
+                    📥 Rasmni yuklab olish
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        function buildOrderCard(order) {
+            const date = new Date(order.created_at);
+            const formattedDate = date.toLocaleDateString('uz-UZ') + ' ' + date.toLocaleTimeString('uz-UZ', { hour: '2-digit', minute: '2-digit' });
+
+            const paymentHtml = order.payment_type === 'cash'
+                ? '<span class="payment-status payment-cash">Naqd</span>'
+                : `<span class="payment-status payment-card">Karta</span> ${order.payment_receipt ? `<a href="javascript:void(0)" onclick="openModal('${order.payment_receipt}', '${order.id}')" style="font-size: 12px; margin-left: 8px; color: var(--primary);">Chekni ko'rish</a>` : ''}`;
+
+            return `
+                <div class="order-card" id="order-${order.id}">
+                    <div class="order-header">
+                        <span class="order-id">#${order.id}</span>
+                        <span class="order-time">${formattedDate}</span>
+                    </div>
+
+                    <div class="info-row">
+                        <span class="info-label">Telefon</span>
+                        <span class="info-value">${order.phone_number}</span>
+                    </div>
+
+                    <div class="info-row">
+                        <span class="info-label">Mahsulotlar</span>
+                        <div class="products-list">${order.total_products}</div>
+                    </div>
+
+                    <div class="info-row">
+                        <span class="info-label">Umumiy summa</span>
+                        <span class="info-value" style="font-size: 18px; color: var(--text-main); font-weight: 700;">${order.total_price} so'm</span>
+                    </div>
+
+                    <div class="info-row">
+                        <span class="info-label">To'lov</span>
+                        <div>${paymentHtml}</div>
+                    </div>
+
+                    <div class="info-row">
+                        <span class="info-label">Manzil (📍)</span>
+                        <div class="info-value">
+                            ${order.location_latitude && order.location_longitude
+                    ? `<a href="https://www.google.com/maps?q=${order.location_latitude},${order.location_longitude}" target="_blank" style="color: var(--primary); text-decoration: none;">📍 Google Maps'da ko'rish</a>`
+                    : (order.location_text || '<span style="color: var(--text-muted);">Noma\'lum</span>')}
+                        </div>
+                    </div>
+
+                    <div class="actions">
+                        <form action="/api/orders/${order.id}/complete/" method="post" style="flex: 1;">
+                            <input type="hidden" name="csrfmiddlewaretoken" value="${getCookie('csrftoken')}">
+                            <button type="submit" class="btn btn-success" style="width: 100%;">Tayyor</button>
+                        </form>
+                        <form action="/api/orders/${order.id}/cancel/" method="post" style="flex: 1;">
+                            <input type="hidden" name="csrfmiddlewaretoken" value="${getCookie('csrftoken')}">
+                            <button type="submit" class="btn btn-danger" style="width: 100%;">Bekor</button>
+                        </form>
+                    </div>
+                </div>
+            `;
+        }
+
+        function fetchOrders() {
+            fetch('/api/active-orders/')
+                .then(response => response.json())
+                .then(data => {
+                    const container = document.getElementById('orders-container');
+
+                    if (data.length === 0) {
+                        container.innerHTML = '<div class="no-orders">Hozircha aktiv buyurtmalar yo\'q.</div>';
+                        return;
+                    }
+
+                    // Simple approach: rebuild container if length changed or first time
+                    // For better UX, we could diff them, but rebuilding is fine for admin panel
+                    let newHtml = '';
+                    data.forEach(order => {
+                        newHtml += buildOrderCard(order);
+                    });
+                    container.innerHTML = newHtml;
+                })
+                .catch(error => console.error('Error fetching orders:', error));
+        }
+
+        setInterval(fetchOrders, 5000); // Poll every 5 seconds
+
+        function openModal(imgUrl, orderId) {
+            const modal = document.getElementById('receipt-modal');
+            const modalImg = document.getElementById('modal-image');
+            const downloadBtn = document.getElementById('download-btn');
+
+            modal.style.display = "flex";
+            modalImg.src = imgUrl;
+            downloadBtn.href = imgUrl;
+            downloadBtn.download = `Buyurtma #${orderId}.jpg`;
+        }
+
+        document.querySelector('.close-modal').onclick = function () {
+            document.getElementById('receipt-modal').style.display = "none";
+        }
+
+        window.onclick = function (event) {
+            const modal = document.getElementById('receipt-modal');
+            if (event.target == modal) {
+                modal.style.display = "none";
+            }
+        }
+    </script>
+</body>
+
+</html>

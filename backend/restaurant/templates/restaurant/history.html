@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Buyurtmalar Tarixi</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--primary:#0062ff;--success:#10b981;--danger:#ef4444;--warning:#f59e0b;--bg-body:#f8fafc;--bg-card:#fff;--text-main:#1e293b;--text-muted:#64748b;--border:#e2e8f0;--shadow:0 4px 6px -1px rgb(0 0 0/0.1),0 2px 4px -2px rgb(0 0 0/0.1)}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Inter,sans-serif;background:var(--bg-body);color:var(--text-main);padding:24px;min-height:100vh}
+.container{max-width:1400px;margin:0 auto}
+header{display:flex;justify-content:space-between;align-items:center;margin-bottom:32px;padding-bottom:16px;border-bottom:1px solid var(--border)}
+h1{font-size:24px;font-weight:700}
+.back-link{font-size:14px;color:var(--primary);text-decoration:none;font-weight:500;display:flex;align-items:center;gap:8px;padding:8px 16px;background:#fff;border:1px solid var(--border);border-radius:8px;transition:all .2s}
+.back-link:hover{background:var(--bg-body);border-color:var(--primary)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(350px,1fr));gap:24px}
+.card{background:var(--bg-card);border-radius:16px;padding:24px;box-shadow:var(--shadow);border:1px solid var(--border);display:flex;flex-direction:column;gap:16px}
+.card-head{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);padding-bottom:12px}
+.card-id{font-weight:700;font-size:1.25rem;color:var(--primary)}
+.card-time{font-size:.9rem;color:var(--text-muted)}
+.row{display:flex;flex-direction:column;gap:4px}
+.lbl{font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--text-muted);font-weight:700}
+.val{font-size:15px;font-weight:500}
+.products{background:#f1f5f9;padding:12px;border-radius:8px;font-size:14px;max-height:100px;overflow-y:auto;white-space:pre-line}
+.s-done{display:inline-flex;padding:4px 12px;border-radius:99px;font-size:12px;font-weight:600;background:#dcfce7;color:#166534}
+.s-cancel{display:inline-flex;padding:4px 12px;border-radius:99px;font-size:12px;font-weight:600;background:#fee2e2;color:#991b1b}
+.s-wait{display:inline-flex;padding:4px 12px;border-radius:99px;font-size:12px;font-weight:600;background:#fef3c7;color:#92400e}
+.price-box{padding:16px;background:#fff8f1;border-radius:10px;border-left:5px solid #f59e0b}
+.price-lbl{font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:#af5b00;font-weight:700;margin-bottom:4px}
+.price-val{font-size:1.6rem;font-weight:800;color:#000;letter-spacing:-.02em}
+.pay{font-size:1rem;color:var(--text-main);margin-top:4px}
+.empty{grid-column:1/-1;text-align:center;padding:60px;background:#fff;border-radius:16px;border:1px dashed var(--border);color:var(--text-muted)}
+.modal{display:none;position:fixed;z-index:2000;left:0;top:0;width:100%;height:100%;background:rgba(0,0,0,.85);backdrop-filter:blur(5px);overflow:auto;padding:20px}
+.modal-box{margin:40px auto;display:flex;flex-direction:column;align-items:center;max-width:600px;width:100%;position:relative;background:#fff;padding:20px;border-radius:16px;box-shadow:0 25px 50px -12px rgba(0,0,0,.5)}
+.modal-box img{width:100%;height:auto;border-radius:8px;margin-bottom:20px;border:1px solid var(--border)}
+.x-btn{position:absolute;top:-50px;right:0;color:#fff;font-size:35px;font-weight:bold;cursor:pointer}
+.dl-btn{text-decoration:none;padding:12px;border-radius:8px;font-weight:600;text-align:center;background:var(--success);color:#fff;border:none;cursor:pointer;display:block;width:100%}
+@media(max-width:640px){.grid{grid-template-columns:1fr}header{flex-direction:column;gap:16px;align-items:flex-start}}
+</style>
+</head>
+<body>
+<div class="container">
+<header>
+<a href="{% url 'orders_list' %}" class="back-link">&larr; Aktiv Buyurtmalar</a>
+<h1>Buyurtmalar Tarixi</h1>
+</header>
+<div class="grid">
+{% if orders %}{% for order in orders %}<div class="card">
+<div class="card-head"><span class="card-id">#{{ order.id }}</span><span class="card-time">{{ order.created_at|date:"d.m.Y H:i" }}</span></div>
+<div class="row"><span class="lbl">Holati</span><div>{% if order.status == 'completed' %}<span class="s-done">Tayyorlandi</span>{% elif order.status == 'cancelled' %}<span class="s-cancel">Bekor qilindi</span>{% else %}<span class="s-wait">Kutilmoqda</span>{% endif %}</div></div>
+<div class="row"><span class="lbl">Telefon</span><span class="val">{{ order.phone_number }}</span></div>
+<div class="row"><span class="lbl">Mahsulotlar</span><div class="products">{{ order.total_products }}</div></div>
+<div class="price-box"><div class="price-lbl">Umumiy summa</div><div class="price-val">{{ order.total_price }} so'm</div></div>
+<div class="row"><span class="lbl">To'lov turi</span><div class="pay">{% if order.payment_type == 'cash' %}Naqd{% else %}Karta{% if order.payment_receipt %} &bull; <a href="javascript:void(0)" onclick="openModal('{{ order.payment_receipt.url }}','{{ order.id }}')" style="color:var(--primary);text-decoration:underline;font-weight:500">Chekni ko'rish</a>{% endif %}{% endif %}</div></div>
+</div>{% endfor %}{% else %}<div class="empty">Tarix bo'sh.</div>{% endif %}
+</div>
+</div>
+<div id="rm" class="modal"><div class="modal-box"><span class="x-btn">&times;</span><img id="mi" src="" alt="Receipt"><a id="db" href="" download="" class="dl-btn">&#128229; Rasmni yuklab olish</a></div></div>
+<script>
+function openModal(u,i){var m=document.getElementById('rm'),g=document.getElementById('mi'),d=document.getElementById('db');m.style.display='flex';g.src=u;d.href=u;d.download='Buyurtma #'+i+'.jpg';}
+document.querySelector('.x-btn').onclick=function(){document.getElementById('rm').style.display='none';};
+window.onclick=function(e){if(e.target==document.getElementById('rm'))document.getElementById('rm').style.display='none';};
+</script>
+</body>
+</html>
