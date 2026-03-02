@@ -10,8 +10,16 @@ router = Router()
 async def start(message: types.Message):
     await message.answer("Xush kelibsiz! 🍲", reply_markup=get_main_keyboard())
     
-    async with aiohttp.ClientSession() as session:
-        async with session.get(f"{API_URL}/api/menus/") as response:
-            menus = await response.json()
-
-    await message.answer("🍽 Menuni tanlang:", reply_markup=get_menus_keyboard(menus))
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.get(f"{API_URL}/api/menus/") as response:
+                if response.status == 200:
+                    menus = await response.json()
+                    if menus:
+                        await message.answer("🍽 Menuni tanlang:", reply_markup=get_menus_keyboard(menus))
+                    else:
+                        await message.answer("Hozircha bo'limlar yaratilmagan. Iltimos, keyinroq qayta urunib ko'ring.")
+                else:
+                    await message.answer("Xatolik: Menu ma'lumotlarini yuklab bo'lmadi.")
+    except Exception:
+        await message.answer("Serverga ulanishda xatolik yuz berdi. Iltimos, admin panelda bo'limlar borligini tekshiring.")
