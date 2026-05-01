@@ -84,3 +84,51 @@ async def back_to_menu(callback: CallbackQuery):
     
     await callback.message.delete()
     await callback.message.answer("🍽 Menuni tanlang:", reply_markup=get_menus_keyboard(menus))
+
+import json
+from aiogram.fsm.context import FSMContext
+from states import OrderFood
+from keyboards import get_location_keyboard, get_contact_keyboard
+
+@router.message(F.web_app_data)
+async def handle_web_app_data(message: types.Message, state: FSMContext):
+    data = message.web_app_data.data
+    try:
+        parsed_data = json.loads(data)
+        if parsed_data.get('action') == 'checkout':
+            items = parsed_data.get('items', [])
+            cart = []
+            for item in items:
+                # Web app sends items with quantity, we add them to cart
+                # To match existing cart format, we can add it multiple times or just store it.
+                # The existing cart expects list of items: {'id': 1, 'title': '...', 'price': 100}
+                # So we expand the quantity back to list
+                for _ in range(item['quantity']):
+                    cart.append({
+                        "id": item['id'],
+                        "title": item['title'],
+                        "price": float(item['price'])
+                    })
+            
+            await state.update_data(cart=cart)
+            
+            # Start checkout process
+            user_id = message.from_user.id
+            
+            # Check if user exists
+            async with aiohttp.ClientSession() as session:
+                async with session.get(f"{API_URL}/api/users/{user_id}/") as resp:
+                    if resp.status == 200:
+                        user_data = await resp.json()
+                        if user_data.get('phone_number'):
+                            # Phone number exists, skip asking
+                            await state.update_data(phone=user_data['phone_number'])
+                            await message.answer("📍 Iltimos, joylashuvingizni yuboring:", reply_markup=get_location_keyboard())
+                            await state.set_state(OrderFood.WaitingForLocation)
+                            return
+
+            await message.answer("📞 Iltimos, telefon raqamingizni yuboring:", reply_markup=get_contact_keyboard())
+            await state.set_state(OrderFood.WaitingForPhone)
+
+    except json.JSONDecodeError:
+        await message.answer("Xatolik yuz berdi. Iltimos qaytadan urinib ko'ring.")

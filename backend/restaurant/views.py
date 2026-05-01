@@ -175,3 +175,6 @@ def cancel_order(request, order_id):
 def orders_history(request):
     orders = Order.objects.filter(is_active=False).order_by('-created_at')
     return render(request, 'restaurant/history.html', {'orders': orders})
+
+def webapp_menu(request):
+    return render(request, 'restaurant/webapp.html')

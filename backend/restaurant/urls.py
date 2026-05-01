@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import DishListView, MenuListView, DishDetailAPIView, orders_list, complete_order, cancel_order, OrderCreateView, orders_history, ActiveOrderListAPIView, TelegramUserView
+from .views import DishListView, MenuListView, DishDetailAPIView, orders_list, complete_order, cancel_order, OrderCreateView, orders_history, ActiveOrderListAPIView, TelegramUserView, webapp_menu
 
 urlpatterns = [
     path('menus/', MenuListView.as_view()),
@@ -13,4 +13,5 @@ urlpatterns = [
     path('active-orders/', ActiveOrderListAPIView.as_view(), name='api_active_orders'),
     path('users/<int:user_id>/', TelegramUserView.as_view(), name='api_user_detail'),
     path('users/create/', TelegramUserView.as_view(), name='api_user_create'),
+    path('webapp/', webapp_menu, name='webapp_menu'),
 ]

@@ -44,9 +44,12 @@ def get_location_keyboard():
     keyboard.button(text="📍 Lokatsiyani yuborish", request_location=True)
     return keyboard.as_markup(resize_keyboard=True, one_time_keyboard=True)
 
+from config import API_URL
+from aiogram.types import WebAppInfo
+
 def get_main_keyboard():
     keyboard = ReplyKeyboardBuilder()
-    keyboard.button(text="📋 Menu")
+    keyboard.button(text="📋 Menu", web_app=WebAppInfo(url=f"{API_URL}/api/webapp/"))
     return keyboard.as_markup(resize_keyboard=True)
 
 def get_payment_type_keyboard():
