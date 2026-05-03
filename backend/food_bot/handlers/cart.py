@@ -32,11 +32,21 @@ async def add_to_cart(callback: CallbackQuery, state: FSMContext):
 
 @router.callback_query(F.data == "cart_show")
 async def show_cart(callback: CallbackQuery, state: FSMContext):
+    await _show_cart_logic(callback.message, state, is_callback=True, callback_query=callback)
+
+@router.message(F.text == "🛒 Savat")
+async def show_cart_text(message: Message, state: FSMContext):
+    await _show_cart_logic(message, state, is_callback=False)
+
+async def _show_cart_logic(message: Message, state: FSMContext, is_callback=False, callback_query=None):
     user_data = await state.get_data()
     cart = user_data.get("cart", [])
 
     if not cart:
-        await callback.answer("Savatingiz bo'sh!", show_alert=True)
+        if is_callback and callback_query:
+            await callback_query.answer("Savatingiz bo'sh!", show_alert=True)
+        else:
+            await message.answer("Savatingiz bo'sh!")
         return
 
     text = "🛒 <b>Savatdagi mahsulotlar:</b>\n\n"
@@ -47,7 +57,7 @@ async def show_cart(callback: CallbackQuery, state: FSMContext):
     
     text += f"\n<b>Jami: {total_price} so'm</b>"
 
-    await callback.message.answer(text, reply_markup=get_cart_keyboard(), parse_mode="HTML")
+    await message.answer(text, reply_markup=get_cart_keyboard(), parse_mode="HTML")
 
 @router.callback_query(F.data == "cart_clear")
 async def clear_cart(callback: CallbackQuery, state: FSMContext):

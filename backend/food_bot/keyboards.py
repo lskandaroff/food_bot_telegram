@@ -14,6 +14,7 @@ def get_dishes_keyboard(dishes):
     for d in dishes:
         keyboard.button(text=d['title'], callback_data=f"dish_{d['id']}")
     
+    keyboard.button(text="⬅️ Ortga", callback_data="back_to_menu")
     keyboard.button(text="🛒 Savat", callback_data="cart_show")
     keyboard.adjust(1)
     return keyboard.as_markup()
@@ -21,8 +22,8 @@ def get_dishes_keyboard(dishes):
 def get_dish_detail_keyboard(dish_id):
     keyboard = InlineKeyboardBuilder()
     keyboard.button(text="🛒 Savatga qo'shish", callback_data=f"cart_add_{dish_id}")
+    keyboard.button(text="⬅️ Ortga", callback_data="back_to_menu")
     keyboard.button(text="🛒 Savat", callback_data="cart_show")
-    keyboard.button(text="⬅️ Menuga qaytish", callback_data="back_to_menu")
     keyboard.adjust(1)
     return keyboard.as_markup()
 
@@ -30,7 +31,7 @@ def get_cart_keyboard():
     keyboard = InlineKeyboardBuilder()
     keyboard.button(text="✅ Buyurtma berish", callback_data="order_confirm")
     keyboard.button(text="🗑 Savatni tozalash", callback_data="cart_clear")
-    keyboard.button(text="⬅️ Menuga qaytish", callback_data="back_to_menu")
+    keyboard.button(text="⬅️ Ortga", callback_data="back_to_menu")
     keyboard.adjust(1)
     return keyboard.as_markup()
 
@@ -49,7 +50,11 @@ from aiogram.types import WebAppInfo
 
 def get_main_keyboard():
     keyboard = ReplyKeyboardBuilder()
-    keyboard.button(text="📋 Menu", web_app=WebAppInfo(url=f"{API_URL}/api/webapp/"))
+    keyboard.button(text="🌐 Saytga kirish", web_app=WebAppInfo(url=f"{API_URL}/api/webapp/"))
+    keyboard.button(text="🍽 Menular")
+    keyboard.button(text="⬅️ Ortga")
+    keyboard.button(text="🛒 Savat")
+    keyboard.adjust(2, 2)
     return keyboard.as_markup(resize_keyboard=True)
 
 def get_payment_type_keyboard():

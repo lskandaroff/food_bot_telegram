@@ -8,13 +8,26 @@ from keyboards import get_dishes_keyboard, get_dish_detail_keyboard, get_menus_k
 
 router = Router()
 
-@router.message(F.text == "📋 Menu")
+@router.message(F.text == "🍽 Menular")
 async def show_menu(message: types.Message):
-    async with aiohttp.ClientSession() as session:
-        async with session.get(f"{API_URL}/api/menus/") as response:
-            menus = await response.json()
-    
-    await message.answer("🍽 Menuni tanlang:", reply_markup=get_menus_keyboard(menus))
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.get(f"{API_URL}/api/menus/") as response:
+                if response.status == 200:
+                    menus = await response.json()
+                    if menus:
+                        await message.answer("🍽 Menuni tanlang:", reply_markup=get_menus_keyboard(menus))
+                    else:
+                        await message.answer("Hozircha bo'limlar yaratilmagan. Iltimos, keyinroq qayta urunib ko'ring.")
+                else:
+                    await message.answer("Xatolik: Menu ma'lumotlarini yuklab bo'lmadi.")
+    except Exception:
+        await message.answer("Serverga ulanishda xatolik yuz berdi.")
+
+@router.message(F.text == "⬅️ Ortga")
+async def back_to_main_text(message: types.Message):
+    from keyboards import get_main_keyboard
+    await message.answer("Asosiy menu:", reply_markup=get_main_keyboard())
 
 @router.callback_query(F.data.startswith("menu_"))
 async def menu_selected(callback: CallbackQuery):
@@ -112,23 +125,9 @@ async def handle_web_app_data(message: types.Message, state: FSMContext):
             
             await state.update_data(cart=cart)
             
-            # Start checkout process
-            user_id = message.from_user.id
-            
-            # Check if user exists
-            async with aiohttp.ClientSession() as session:
-                async with session.get(f"{API_URL}/api/users/{user_id}/") as resp:
-                    if resp.status == 200:
-                        user_data = await resp.json()
-                        if user_data.get('phone_number'):
-                            # Phone number exists, skip asking
-                            await state.update_data(phone=user_data['phone_number'])
-                            await message.answer("📍 Iltimos, joylashuvingizni yuboring:", reply_markup=get_location_keyboard())
-                            await state.set_state(OrderFood.WaitingForLocation)
-                            return
-
-            await message.answer("📞 Iltimos, telefon raqamingizni yuboring:", reply_markup=get_contact_keyboard())
-            await state.set_state(OrderFood.WaitingForPhone)
+            # Show cart instead of proceeding to checkout immediately
+            from handlers.cart import _show_cart_logic
+            await _show_cart_logic(message, state, is_callback=False)
 
     except json.JSONDecodeError:
         await message.answer("Xatolik yuz berdi. Iltimos qaytadan urinib ko'ring.")
