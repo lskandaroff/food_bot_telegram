@@ -2,7 +2,7 @@ from aiogram import Router, F
 from aiogram.types import CallbackQuery, Message, ReplyKeyboardRemove
 from aiogram.fsm.context import FSMContext
 import aiohttp
-from config import API_URL
+from config import API_URL, LOCAL_API_URL
 from keyboards import get_cart_keyboard, get_contact_keyboard, get_location_keyboard, get_payment_type_keyboard
 from states import OrderFood
 
@@ -13,7 +13,7 @@ async def add_to_cart(callback: CallbackQuery, state: FSMContext):
     dish_id = callback.data.split("_")[2]
 
     async with aiohttp.ClientSession() as session:
-        async with session.get(f"{API_URL}/api/dishes/{dish_id}/") as resp:
+        async with session.get(f"{LOCAL_API_URL}/api/dishes/{dish_id}/") as resp:
             if resp.status == 200:
                 dish = await resp.json()
                 
@@ -70,7 +70,7 @@ async def confirm_order(callback: CallbackQuery, state: FSMContext):
     
     # Check if user exists
     async with aiohttp.ClientSession() as session:
-        async with session.get(f"{API_URL}/api/users/{user_id}/") as resp:
+        async with session.get(f"{LOCAL_API_URL}/api/users/{user_id}/") as resp:
             if resp.status == 200:
                 user_data = await resp.json()
                 if user_data.get('phone_number'):
@@ -102,7 +102,7 @@ async def process_phone(message: Message, state: FSMContext):
     }
 
     async with aiohttp.ClientSession() as session:
-        async with session.post(f"{API_URL}/api/users/create/", json=user_data) as resp:
+        async with session.post(f"{LOCAL_API_URL}/api/users/create/", json=user_data) as resp:
             if resp.status not in [200, 201]:
                 print(f"Failed to save user: {await resp.text()}")
 
@@ -199,7 +199,7 @@ async def create_order(message: Message, state: FSMContext, payment_type: str, r
 
     async with aiohttp.ClientSession() as session:
         try:
-            async with session.post(f"{API_URL}/api/orders/create/", data=data) as resp:
+            async with session.post(f"{LOCAL_API_URL}/api/orders/create/", data=data) as resp:
                 if resp.status == 201:
                     print(f"Order saved: {await resp.json()}")
                 else:

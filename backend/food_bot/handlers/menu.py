@@ -1,9 +1,10 @@
 from aiogram import Router, types, F
 from aiogram.types import CallbackQuery, FSInputFile
 import aiohttp
+import logging
 from urllib.parse import unquote
 from pathlib import Path
-from config import API_URL
+from config import API_URL, LOCAL_API_URL
 from keyboards import get_dishes_keyboard, get_dish_detail_keyboard, get_menus_keyboard
 
 router = Router()
@@ -12,7 +13,7 @@ router = Router()
 async def show_menu(message: types.Message):
     try:
         async with aiohttp.ClientSession() as session:
-            async with session.get(f"{API_URL}/api/menus/") as response:
+            async with session.get(f"{LOCAL_API_URL}/api/menus/") as response:
                 if response.status == 200:
                     menus = await response.json()
                     if menus:
@@ -34,7 +35,7 @@ async def menu_selected(callback: CallbackQuery):
     menu_id = callback.data.split("_")[1]
 
     async with aiohttp.ClientSession() as session:
-        async with session.get(f"{API_URL}/api/menus/{menu_id}/dishes/") as resp:
+        async with session.get(f"{LOCAL_API_URL}/api/menus/{menu_id}/dishes/") as resp:
             if resp.status != 200:
                 await callback.message.answer("Taomlar topilmadi!")
                 return
@@ -47,7 +48,7 @@ async def dish_selected(callback: CallbackQuery):
     dish_id = callback.data.split("_")[1]
 
     async with aiohttp.ClientSession() as session:
-        async with session.get(f"{API_URL}/api/dishes/{dish_id}/") as resp:
+        async with session.get(f"{LOCAL_API_URL}/api/dishes/{dish_id}/") as resp:
             if resp.status != 200:
                 await callback.message.answer("Taom topilmadi!")
                 return
@@ -92,7 +93,7 @@ async def dish_selected(callback: CallbackQuery):
 @router.callback_query(F.data == "back_to_menu")
 async def back_to_menu(callback: CallbackQuery):
     async with aiohttp.ClientSession() as session:
-        async with session.get(f"{API_URL}/api/menus/") as response:
+        async with session.get(f"{LOCAL_API_URL}/api/menus/") as response:
             menus = await response.json()
     
     await callback.message.delete()
