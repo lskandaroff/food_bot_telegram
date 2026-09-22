@@ -138,7 +138,7 @@ class MenuListView(APIView):
 class DishListView(APIView):
     def get(self, request, menu_id):
         dishes = Dish.objects.filter(menu_id=menu_id)
-        serializer = DishSerializer(dishes, many=True)
+        serializer = DishSerializer(dishes, many=True, context={'request': request})
         return Response(serializer.data)
 
 
