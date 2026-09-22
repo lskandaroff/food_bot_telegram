@@ -18,9 +18,10 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
-from restaurant.views import health_check
+from restaurant.views import health_check, webapp_menu
 
 urlpatterns = [
+    path('', webapp_menu, name='home'),
     path('ping/', health_check, name='ping'),
     path('admin/', admin.site.urls),
     path('api/', include('restaurant.urls')),  # shu qator bo‘lishi shart
