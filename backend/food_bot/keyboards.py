@@ -49,16 +49,28 @@ from config import API_URL
 from aiogram.types import WebAppInfo
 
 def get_main_keyboard():
+    from config import API_URL
+    clean_url = API_URL.rstrip('/')
     keyboard = ReplyKeyboardBuilder()
-    keyboard.button(text="🌐 Saytga kirish", web_app=WebAppInfo(url=f"{API_URL}/api/webapp/"))
+    keyboard.button(text="🌐 Saytga kirish", web_app=WebAppInfo(url=f"{clean_url}/api/webapp/"))
     keyboard.button(text="🍽 Menular")
     keyboard.button(text="⬅️ Ortga")
     keyboard.button(text="🛒 Savat")
     keyboard.adjust(2, 2)
     return keyboard.as_markup(resize_keyboard=True)
 
+
 def get_payment_type_keyboard():
     keyboard = ReplyKeyboardBuilder()
     keyboard.button(text="💵 Naqd")
     keyboard.button(text="💳 Karta")
     return keyboard.as_markup(resize_keyboard=True, one_time_keyboard=True)
+
+def get_delivery_type_keyboard():
+    keyboard = ReplyKeyboardBuilder()
+    keyboard.button(text="🚖 Yetkazib berish")
+    keyboard.button(text="🏃 Olib ketish")
+    keyboard.button(text="🍽 Shu yerda yeyish")
+    keyboard.adjust(2, 1)
+    return keyboard.as_markup(resize_keyboard=True, one_time_keyboard=True)
+

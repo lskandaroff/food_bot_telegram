@@ -16,3 +16,4 @@ if RENDER_HOSTNAME and (API_URL == 'http://127.0.0.1:8000' or API_URL == 'http:/
     LOCAL_API_URL = API_URL  # Renderda ulanish uchun muammo yo'q
 
 DELIVERY_PERSON_ID = int(os.getenv('DELIVERY_PERSON_ID', '779171993'))
+ADMIN_ID = int(os.getenv('ADMIN_ID', os.getenv('DELIVERY_PERSON_ID', '779171993')))

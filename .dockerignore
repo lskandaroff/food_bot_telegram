@@ -1,0 +1,12 @@
+venv
+venv2
+.git
+.gitignore
+.idea
+.ruff_cache
+__pycache__
+*.pyc
+*.log
+cloudflared.exe
+temp
+db.sqlite3

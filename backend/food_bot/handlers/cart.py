@@ -3,7 +3,7 @@ from aiogram.types import CallbackQuery, Message, ReplyKeyboardRemove
 from aiogram.fsm.context import FSMContext
 import aiohttp
 from config import API_URL, LOCAL_API_URL
-from keyboards import get_cart_keyboard, get_contact_keyboard, get_location_keyboard, get_payment_type_keyboard
+from keyboards import get_cart_keyboard, get_contact_keyboard, get_location_keyboard, get_payment_type_keyboard, get_delivery_type_keyboard
 from states import OrderFood
 
 router = Router()
@@ -74,10 +74,10 @@ async def confirm_order(callback: CallbackQuery, state: FSMContext):
             if resp.status == 200:
                 user_data = await resp.json()
                 if user_data.get('phone_number'):
-                    # Phone number exists, skip asking
+                    # Phone number exists, ask for delivery type
                     await state.update_data(phone=user_data['phone_number'])
-                    await callback.message.answer("📍 Iltimos, joylashuvingizni yuboring:", reply_markup=get_location_keyboard())
-                    await state.set_state(OrderFood.WaitingForLocation)
+                    await callback.message.answer("🛵 Buyurtma turini tanlang:", reply_markup=get_delivery_type_keyboard())
+                    await state.set_state(OrderFood.ChoosingDeliveryType)
                     await callback.answer()
                     return
 
@@ -107,8 +107,27 @@ async def process_phone(message: Message, state: FSMContext):
                 print(f"Failed to save user: {await resp.text()}")
 
     await state.update_data(phone=phone)
-    await message.answer("📍 Iltimos, joylashuvingizni yuboring:", reply_markup=get_location_keyboard())
-    await state.set_state(OrderFood.WaitingForLocation)
+    await message.answer("🛵 Buyurtma turini tanlang:", reply_markup=get_delivery_type_keyboard())
+    await state.set_state(OrderFood.ChoosingDeliveryType)
+
+@router.message(OrderFood.ChoosingDeliveryType)
+async def process_delivery_type(message: Message, state: FSMContext):
+    delivery_type_text = message.text
+
+    if delivery_type_text == "🚖 Yetkazib berish":
+        await state.update_data(delivery_type="Yetkazib berish")
+        await message.answer("📍 Iltimos, joylashuvingizni yuboring:", reply_markup=get_location_keyboard())
+        await state.set_state(OrderFood.WaitingForLocation)
+    elif delivery_type_text == "🏃 Olib ketish":
+        await state.update_data(delivery_type="Olib ketish", location="🏃 Olib ketish")
+        await message.answer("💰 To'lov turini tanlang:", reply_markup=get_payment_type_keyboard())
+        await state.set_state(OrderFood.ChoosingPaymentType)
+    elif delivery_type_text == "🍽 Shu yerda yeyish":
+        await state.update_data(delivery_type="Shu yerda yeyish", location="🍽 Shu yerda yeyish")
+        await message.answer("💰 To'lov turini tanlang:", reply_markup=get_payment_type_keyboard())
+        await state.set_state(OrderFood.ChoosingPaymentType)
+    else:
+        await message.answer("Iltimos, buyurtma turini quyidagi tugmalar orqali tanlang:", reply_markup=get_delivery_type_keyboard())
 
 @router.message(OrderFood.WaitingForLocation)
 async def process_location(message: Message, state: FSMContext):
@@ -118,12 +137,12 @@ async def process_location(message: Message, state: FSMContext):
         await message.answer("💰 To'lov turini tanlang:", reply_markup=get_payment_type_keyboard())
         await state.set_state(OrderFood.ChoosingPaymentType)
     else:
-        # User sent text or something other than location
         await message.answer(
             "❌ Iltimos, lokatsiyangizni yuboring!\n\n"
             "📍 Pastdagi '📍 Lokatsiyani yuborish' tugmasini bosing.",
             reply_markup=get_location_keyboard()
         )
+
 
 
 @router.message(OrderFood.ChoosingPaymentType)

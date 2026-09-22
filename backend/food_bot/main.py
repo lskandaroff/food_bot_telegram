@@ -2,7 +2,7 @@ from aiogram import Bot, Dispatcher
 import asyncio
 import logging
 from config import TOKEN
-from handlers import start, menu, cart
+from handlers import start, menu, cart, admin
 
 # Loggingni yoqish
 import logging.handlers
@@ -25,6 +25,8 @@ dp = Dispatcher()
 dp.include_router(start.router)
 dp.include_router(menu.router)
 dp.include_router(cart.router)
+dp.include_router(admin.router)
+
 
 import os
 import aiohttp
@@ -52,8 +54,14 @@ async def main():
     # Keep-alive vazifasini fonda ishga tushiramiz
     asyncio.create_task(keep_alive())
     
-    # Botni ishga tushirish
-    await dp.start_polling(bot)
+    # Botni ishga tushirish (tarmoq uzilganda avto-qayta ulanadi)
+    while True:
+        try:
+            logging.info("Bot polling boshlanmoqda...")
+            await dp.start_polling(bot)
+        except Exception as e:
+            logging.error(f"Polling xatosi: {e}. 3 soniyadan so'ng qayta ulanadi...")
+            await asyncio.sleep(3)
 
 if __name__ == "__main__":
     asyncio.run(main())

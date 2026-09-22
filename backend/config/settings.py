@@ -31,21 +31,38 @@ SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-g-&9q)8i0!^c9)jsa2r=whx*p-
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DEBUG', 'True') == 'True'
 
-ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '*').split(',')
+ALLOWED_HOSTS = [h.strip() for h in os.getenv('ALLOWED_HOSTS', '*').split(',') if h.strip()]
 
-# Render.com hostname
+# Render.com / Northflank hostname auto-detection
 RENDER_EXTERNAL_HOSTNAME = os.getenv('RENDER_EXTERNAL_HOSTNAME')
 if RENDER_EXTERNAL_HOSTNAME:
     ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
 
+API_URL = os.getenv('API_URL')
+if API_URL:
+    domain = API_URL.replace('https://', '').replace('http://', '').split('/')[0]
+    if domain and domain not in ALLOWED_HOSTS:
+        ALLOWED_HOSTS.append(domain)
+
 # CSRF trusted origins for production
-CSRF_TRUSTED_ORIGINS = [o for o in os.getenv('CSRF_TRUSTED_ORIGINS', '').split(',') if o]
+CSRF_TRUSTED_ORIGINS = [o.strip() for o in os.getenv('CSRF_TRUSTED_ORIGINS', '').split(',') if o.strip()]
+CSRF_TRUSTED_ORIGINS.append('https://*.trycloudflare.com')
+CSRF_TRUSTED_ORIGINS.append('https://*.code.run')
+CSRF_TRUSTED_ORIGINS.append('https://*.northflank.app')
+
 if RENDER_EXTERNAL_HOSTNAME:
     CSRF_TRUSTED_ORIGINS.append(f'https://{RENDER_EXTERNAL_HOSTNAME}')
+if API_URL and API_URL.startswith('http'):
+    if API_URL not in CSRF_TRUSTED_ORIGINS:
+        CSRF_TRUSTED_ORIGINS.append(API_URL)
+
 
 # Proxy settings for loca.lt or ngrok
 USE_X_FORWARDED_HOST = True
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+LOGIN_URL = '/admin/login/'
+
 
 
 # Application definition
@@ -98,9 +115,9 @@ WSGI_APPLICATION = 'config.wsgi.application'
 DATABASES = {
     'default': dj_database_url.config(
         default=f'sqlite:///{BASE_DIR / "db.sqlite3"}',
-        conn_max_age=600
     )
 }
+DATABASES['default']['CONN_MAX_AGE'] = 600
 
 
 # Password validation
