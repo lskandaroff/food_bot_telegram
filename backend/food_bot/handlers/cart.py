@@ -153,13 +153,15 @@ async def process_payment_type(message: Message, state: FSMContext):
         await create_order(message, state, "cash")
     elif payment_type == "💳 Karta":
         await message.answer(
-            "💳 <b>Click orqali to'lov:</b>\n\n"
-            "📞 <b>+998 90 123 45 67</b> (Ali V.)\n\n"
-            "Iltimos, to'lovni amalga oshirib, chek rasmini yuboring (vaqti ham ko'rinsin).",
+            "💳 <b>Karta orqali to'lov:</b>\n\n"
+            "🏦 <b>Karta raqam:</b> <code>5614 6818 1039 0520</code>\n"
+            "👤 <b>Egasi:</b> Rahmatov Shohrux\n\n"
+            "✅ Iltimos, to'lovni amalga oshirib, <b>chek rasmini yuboring</b> (vaqti ham ko'rinsin).",
             parse_mode="HTML",
             reply_markup=ReplyKeyboardRemove()
         )
         await state.set_state(OrderFood.WaitingForReceipt)
+
     else:
         await message.answer("Iltimos, to'lov turini tugmalar orqali tanlang.")
 

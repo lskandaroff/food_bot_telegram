@@ -12,6 +12,7 @@ async def start(message: types.Message):
         f"👋 <b>Assalomu aleykum, {message.from_user.first_name}!</b>\n\n"
         "🍔 <b>\"Xushmaza\" Fast Food</b> restoraniga xush kelibsiz! 🍟✨\n\n"
         "Eng mazali va sifatli fast-food taomlarini tezkor yetkazib beramiz! 🚀\n\n"
+        "📞 <b>Admin:</b> +998 94 989 07 66\n\n"
         "Quyidagi tugmalardan birini tanlang:"
     )
     await message.answer(welcome_text, reply_markup=get_main_keyboard(), parse_mode="HTML")
