@@ -185,7 +185,7 @@ def complete_order(request, order_id):
         
         # Send Telegram notification to user
         try:
-            from food_bot.config import TOKEN, DELIVERY_PERSON_ID
+            from food_bot.config import TOKEN, DELIVERY_PERSON_IDS, DELIVERY_PERSON_ID
             
             # Message to customer
             user_message = f"✅ Buyurtmangiz tayyor bo‘ldi! (Buyurtma #{order.id})"
@@ -193,8 +193,11 @@ def complete_order(request, order_id):
             res = requests.post(url_msg, data={"chat_id": order.user_id, "text": user_message}, timeout=10)
             print(f"Telegram sendMessage status: {res.status_code}, response: {res.text}")
             
-            # Message to delivery person
-            if DELIVERY_PERSON_ID:
+            # Message to delivery persons
+            delivery_targets = list(set(DELIVERY_PERSON_IDS if DELIVERY_PERSON_IDS else ([DELIVERY_PERSON_ID] if DELIVERY_PERSON_ID else [])))
+            for dev_id in delivery_targets:
+                if not dev_id:
+                    continue
                 delivery_message = (
                     f"🚚 <b>Yangi yetkazib berish!</b>\n\n"
                     f"🔢 Buyurtma: #{order.id}\n"
@@ -204,33 +207,31 @@ def complete_order(request, order_id):
                 )
                 
                 if order.location_latitude and order.location_longitude:
-                    # Send Google Maps link
                     maps_link = f"https://www.google.com/maps?q={order.location_latitude},{order.location_longitude}"
                     delivery_message += f"\n📍 Manzil: <a href='{maps_link}'>Google Maps</a>"
                     
-                    # Send message with link
                     requests.post(url_msg, data={
-                        "chat_id": DELIVERY_PERSON_ID,
+                        "chat_id": dev_id,
                         "text": delivery_message,
                         "parse_mode": "HTML"
                     }, timeout=10)
                     
-                    # Also send actual Telegram location message
                     url_loc = f"https://api.telegram.org/bot{TOKEN}/sendLocation"
                     requests.post(url_loc, data={
-                        "chat_id": DELIVERY_PERSON_ID,
+                        "chat_id": dev_id,
                         "latitude": float(order.location_latitude),
                         "longitude": float(order.location_longitude)
                     }, timeout=10)
                 elif order.location_text:
                     delivery_message += f"\n📍 Manzil: {order.location_text}"
                     requests.post(url_msg, data={
-                        "chat_id": DELIVERY_PERSON_ID,
+                        "chat_id": dev_id,
                         "text": delivery_message,
                         "parse_mode": "HTML"
                     }, timeout=10)
         except Exception as e:
             print(f"Error sending telegram message: {e}")
+
             
         if request.headers.get('Content-Type') == 'application/json' or request.headers.get('Accept') == 'application/json' or request.headers.get('X-Requested-With') == 'XMLHttpRequest':
             return JsonResponse({'status': 'success', 'order_id': order.id})

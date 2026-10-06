@@ -50,9 +50,29 @@ async def keep_alive():
                 logging.error(f"Ping xatosi: {e}")
             await asyncio.sleep(600)  # 10 daqiqa
 
+async def set_bot_description():
+    """Bot kirish qismi (start bosilishidan oldin ko'rinadigan matn)ni sozlash."""
+    try:
+        await bot.set_my_description(
+            "🍔 \"Xushmaza\" Fast Food Restoraniga Xush Kelibsiz! 🍟✨\n\n"
+            "🌟 Eng mazali va sifatli taomlar, issiq va tezkor yetkazib berish!\n\n"
+            "✨ Bizning bot orqali:\n"
+            "• Boy va mazali menyuni ko'rish 📋\n"
+            "• Qulay va tez buyurtma berish 🛒\n"
+            "• Yetkazib berish va to'lov turlarini tanlash 🛵\n\n"
+            "👇 Buyurtma berish uchun START tugmasini bosing!"
+        )
+        await bot.set_my_short_description("🍔 Xushmaza Fast Food — Mazali taomlar va tezkor yetkazib berish boti! 🍟🚀")
+        logging.info("Bot ta'rifi va qisqa ma'lumoti muvaffaqiyatli o'rnatildi.")
+    except Exception as e:
+        logging.error(f"Bot description o'rnatishda xatolik: {e}")
+
 async def main():
     # Keep-alive vazifasini fonda ishga tushiramiz
     asyncio.create_task(keep_alive())
+    
+    # Bot description va short description o'rnatish
+    await set_bot_description()
     
     # Botni ishga tushirish (tarmoq uzilganda avto-qayta ulanadi)
     while True:
@@ -65,3 +85,4 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
