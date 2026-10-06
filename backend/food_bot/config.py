@@ -1,3 +1,4 @@
+# Config module for food_bot (v2.0 - Multi-admin support)
 import os
 from pathlib import Path
 from dotenv import load_dotenv
