@@ -40,11 +40,11 @@ import requests
 from django.http import HttpResponse, JsonResponse
 
 def send_order_to_admin(order):
-    """Buyurtma haqidagi ma'lumotlarni Telegram adminga yuboradi."""
+    """Buyurtma haqidagi ma'lumotlarni Telegram admin(lar)ga yuboradi."""
     try:
-        from food_bot.config import TOKEN, ADMIN_ID, DELIVERY_PERSON_ID
-        admin_id = ADMIN_ID or DELIVERY_PERSON_ID
-        if not admin_id:
+        from food_bot.config import TOKEN, ADMIN_IDS, ADMIN_ID, DELIVERY_PERSON_ID
+        admin_targets = list(set(ADMIN_IDS if ADMIN_IDS else [ADMIN_ID or DELIVERY_PERSON_ID]))
+        if not admin_targets:
             return
 
         msg_text = (
@@ -70,50 +70,55 @@ def send_order_to_admin(order):
             ]
         }
 
-        # Chek rasmi bo'lsa sendPhoto, aks holda sendMessage
-        if order.payment_receipt:
-            try:
-                url_photo = f"https://api.telegram.org/bot{TOKEN}/sendPhoto"
-                with open(order.payment_receipt.path, 'rb') as photo_file:
-                    files = {'photo': photo_file}
-                    data = {
-                        'chat_id': admin_id,
-                        'caption': msg_text,
-                        'parse_mode': 'HTML',
-                        'reply_markup': json.dumps(inline_keyboard)
-                    }
-                    res = requests.post(url_photo, data=data, files=files, timeout=10)
-                    print(f"Telegram sendPhoto to admin status: {res.status_code}")
-            except Exception as pe:
-                print(f"Error sending photo to admin: {pe}")
+        for admin_id in admin_targets:
+            if not admin_id:
+                continue
+
+            # Chek rasmi bo'lsa sendPhoto, aks holda sendMessage
+            if order.payment_receipt:
+                try:
+                    url_photo = f"https://api.telegram.org/bot{TOKEN}/sendPhoto"
+                    with open(order.payment_receipt.path, 'rb') as photo_file:
+                        files = {'photo': photo_file}
+                        data = {
+                            'chat_id': admin_id,
+                            'caption': msg_text,
+                            'parse_mode': 'HTML',
+                            'reply_markup': json.dumps(inline_keyboard)
+                        }
+                        res = requests.post(url_photo, data=data, files=files, timeout=10)
+                        print(f"Telegram sendPhoto to admin {admin_id} status: {res.status_code}")
+                except Exception as pe:
+                    print(f"Error sending photo to admin {admin_id}: {pe}")
+                    url_msg = f"https://api.telegram.org/bot{TOKEN}/sendMessage"
+                    requests.post(url_msg, data={
+                        "chat_id": admin_id,
+                        "text": msg_text,
+                        "parse_mode": "HTML",
+                        "reply_markup": json.dumps(inline_keyboard)
+                    }, timeout=10)
+            else:
                 url_msg = f"https://api.telegram.org/bot{TOKEN}/sendMessage"
-                requests.post(url_msg, data={
+                res = requests.post(url_msg, data={
                     "chat_id": admin_id,
                     "text": msg_text,
                     "parse_mode": "HTML",
                     "reply_markup": json.dumps(inline_keyboard)
                 }, timeout=10)
-        else:
-            url_msg = f"https://api.telegram.org/bot{TOKEN}/sendMessage"
-            res = requests.post(url_msg, data={
-                "chat_id": admin_id,
-                "text": msg_text,
-                "parse_mode": "HTML",
-                "reply_markup": json.dumps(inline_keyboard)
-            }, timeout=10)
-            print(f"Telegram sendMessage to admin status: {res.status_code}")
+                print(f"Telegram sendMessage to admin {admin_id} status: {res.status_code}")
 
-        # Lokatsiya bo'lsa, xaritadagi nuqtani ham yuborish
-        if order.location_latitude and order.location_longitude:
-            url_loc = f"https://api.telegram.org/bot{TOKEN}/sendLocation"
-            requests.post(url_loc, data={
-                "chat_id": admin_id,
-                "latitude": float(order.location_latitude),
-                "longitude": float(order.location_longitude)
-            }, timeout=10)
+            # Lokatsiya bo'lsa, xaritadagi nuqtani ham yuborish
+            if order.location_latitude and order.location_longitude:
+                url_loc = f"https://api.telegram.org/bot{TOKEN}/sendLocation"
+                requests.post(url_loc, data={
+                    "chat_id": admin_id,
+                    "latitude": float(order.location_latitude),
+                    "longitude": float(order.location_longitude)
+                }, timeout=10)
 
     except Exception as e:
         print(f"Error sending order to admin: {e}")
+
 
 
 class OrderCreateView(generics.CreateAPIView):

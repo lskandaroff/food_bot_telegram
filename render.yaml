@@ -18,3 +18,8 @@ services:
         value: "*"
       - key: DELIVERY_PERSON_ID
         value: "779171993"
+      - key: ADMIN_ID
+        value: "6261098836"
+      - key: ADMIN_IDS
+        value: "6261098836,779171993"
+
