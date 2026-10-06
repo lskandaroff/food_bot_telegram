@@ -7,14 +7,16 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(BASE_DIR / '.env')
 
 TOKEN = os.getenv('BOT_TOKEN', '8905877735:AAH8R9FhkCcdKCNkUkD45jLbpjjvfeEvM2Q')
-API_URL = os.getenv('API_URL', 'http://127.0.0.1:8000')
-LOCAL_API_URL = 'http://127.0.0.1:8000'
+PORT = os.getenv('PORT', '8000')
 
-# Render.com automatic URL detection
 RENDER_HOSTNAME = os.getenv('RENDER_EXTERNAL_HOSTNAME')
-if RENDER_HOSTNAME and (API_URL == 'http://127.0.0.1:8000' or API_URL == 'http://localhost:8000'):
+if RENDER_HOSTNAME:
     API_URL = f"https://{RENDER_HOSTNAME}"
-    LOCAL_API_URL = API_URL  # Renderda ulanish uchun muammo yo'q
+    LOCAL_API_URL = f"http://127.0.0.1:{PORT}"
+else:
+    API_URL = os.getenv('API_URL', f'http://127.0.0.1:{PORT}')
+    LOCAL_API_URL = f'http://127.0.0.1:{PORT}'
+
 
 def _parse_ids(env_name, default_str='6261098836,779171993'):
     raw_val = os.getenv(env_name) or default_str
