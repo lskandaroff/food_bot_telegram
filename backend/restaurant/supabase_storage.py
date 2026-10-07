@@ -5,10 +5,11 @@ Rasmlarni Supabase bucket ga yuklaydi, public URL qaytaradi.
 import os
 import uuid
 import mimetypes
+import logging
 import requests
 from django.core.files.storage import Storage
-from django.conf import settings
-from urllib.parse import urljoin
+
+logger = logging.getLogger('restaurant')
 
 
 class SupabaseStorage(Storage):
@@ -20,10 +21,13 @@ class SupabaseStorage(Storage):
       SUPABASE_BUCKET    — bucket nomi (default: food-images)
     """
 
-    def __init__(self):
-        self.supabase_url = os.environ.get('SUPABASE_URL', '').rstrip('/')
-        self.supabase_key = os.environ.get('SUPABASE_KEY', '')
-        self.bucket = os.environ.get('SUPABASE_BUCKET', 'food-images')
+    def __init__(self, *args, **kwargs):
+        url = os.environ.get('SUPABASE_URL', '').rstrip('/')
+        if '/rest/v1' in url:
+            url = url.split('/rest/v1')[0]
+        self.supabase_url = url
+        self.supabase_key = os.environ.get('SUPABASE_KEY', '').strip()
+        self.bucket = os.environ.get('SUPABASE_BUCKET', 'food-images').strip()
 
     def _get_headers(self):
         return {
@@ -40,28 +44,34 @@ class SupabaseStorage(Storage):
     def _save(self, name, content):
         """Faylni Supabase ga yuklaydi, unique nom beradi."""
         ext = os.path.splitext(name)[1]
-        unique_name = f"{os.path.splitext(name)[0]}_{uuid.uuid4().hex[:8]}{ext}"
+        base_name = os.path.splitext(os.path.basename(name))[0]
+        unique_name = f"{base_name}_{uuid.uuid4().hex[:8]}{ext}"
 
         content_type, _ = mimetypes.guess_type(name)
         if not content_type:
-            content_type = 'application/octet-stream'
+            content_type = 'image/jpeg'
 
         headers = self._get_headers()
         headers['Content-Type'] = content_type
 
         file_data = content.read()
 
-        resp = requests.post(
-            self._upload_url(unique_name),
-            headers=headers,
-            data=file_data,
-            timeout=30
-        )
-
-        if resp.status_code not in (200, 201):
-            raise Exception(
-                f"Supabase ga yuklashda xato: {resp.status_code} — {resp.text}"
+        try:
+            resp = requests.post(
+                self._upload_url(unique_name),
+                headers=headers,
+                data=file_data,
+                timeout=30
             )
+
+            if resp.status_code not in (200, 201):
+                logger.error(f"Supabase upload error ({resp.status_code}): {resp.text}")
+                raise Exception(
+                    f"Supabase ga yuklashda xato ({resp.status_code}): {resp.text}"
+                )
+        except Exception as e:
+            logger.error(f"Supabase upload exception: {e}")
+            raise
 
         return unique_name
 
