@@ -22,4 +22,10 @@ services:
         value: "6261098836"
       - key: ADMIN_IDS
         value: "6261098836,779171993"
+      - key: SUPABASE_URL
+        value: "https://ihechhbcvsnhsqpogpxb.supabase.co"
+      - key: SUPABASE_KEY
+        value: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImloZWNoaGJjdnNuaHNxcG9ncHhiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTEzNDAyNzgsImV4cCI6MjEwNjkxNjI3OH0.sRvXg18Rt64PUp1-Sp1MAaPqeuw-Ode-s_W_InLr2kA"
+      - key: SUPABASE_BUCKET
+        value: "food-images"
 

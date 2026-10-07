@@ -74,20 +74,23 @@ def send_order_to_admin(order):
             if not admin_id:
                 continue
 
-            # Chek rasmi bo'lsa sendPhoto, aks holda sendMessage
+        # Chek rasmi bo'lsa sendPhoto, aks holda sendMessage
             if order.payment_receipt:
                 try:
+                    # Supabase yoki boshqa cloud storage da URL orqali yuboramiz
+                    receipt_url = order.payment_receipt.url
                     url_photo = f"https://api.telegram.org/bot{TOKEN}/sendPhoto"
-                    with open(order.payment_receipt.path, 'rb') as photo_file:
-                        files = {'photo': photo_file}
-                        data = {
-                            'chat_id': admin_id,
-                            'caption': msg_text,
-                            'parse_mode': 'HTML',
-                            'reply_markup': json.dumps(inline_keyboard)
-                        }
-                        res = requests.post(url_photo, data=data, files=files, timeout=10)
-                        print(f"Telegram sendPhoto to admin {admin_id} status: {res.status_code}")
+                    data = {
+                        'chat_id': admin_id,
+                        'photo': receipt_url,
+                        'caption': msg_text,
+                        'parse_mode': 'HTML',
+                        'reply_markup': json.dumps(inline_keyboard)
+                    }
+                    res = requests.post(url_photo, data=data, timeout=10)
+                    print(f"Telegram sendPhoto to admin {admin_id} status: {res.status_code}")
+                    if res.status_code != 200:
+                        raise Exception(f"sendPhoto failed: {res.text}")
                 except Exception as pe:
                     print(f"Error sending photo to admin {admin_id}: {pe}")
                     url_msg = f"https://api.telegram.org/bot{TOKEN}/sendMessage"

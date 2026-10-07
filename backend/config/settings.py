@@ -157,9 +157,14 @@ USE_TZ = True
 STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
+# Supabase Storage sozlamalari (Render da rasmlar saqlanadi)
+# Localda bo'lmasa, oddiy FileSystem ishlatiladi
+_USE_SUPABASE = bool(os.getenv('SUPABASE_URL') and os.getenv('SUPABASE_KEY'))
+
 STORAGES = {
     "default": {
-        "BACKEND": "django.core.files.storage.FileSystemStorage",
+        "BACKEND": "restaurant.supabase_storage.SupabaseStorage" if _USE_SUPABASE
+        else "django.core.files.storage.FileSystemStorage",
     },
     "staticfiles": {
         "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage",
