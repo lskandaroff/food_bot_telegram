@@ -25,12 +25,22 @@ class SupabaseStorage(Storage):
     """
 
     def __init__(self, *args, **kwargs):
-        url = os.environ.get('SUPABASE_URL', '').rstrip('/')
-        if '/rest/v1' in url:
-            url = url.split('/rest/v1')[0]
-        self.supabase_url = url
-        self.supabase_key = os.environ.get('SUPABASE_KEY', '').strip()
-        self.bucket = os.environ.get('SUPABASE_BUCKET', 'food-images').strip()
+        raw_url = str(os.environ.get('SUPABASE_URL', '')).strip()
+        for bad in ['\r', '\n', '%0a', '%0A', '%0d', '%0D', ' ']:
+            raw_url = raw_url.replace(bad, '')
+        if '/rest/v1' in raw_url:
+            raw_url = raw_url.split('/rest/v1')[0]
+        self.supabase_url = raw_url.rstrip('/')
+
+        raw_key = str(os.environ.get('SUPABASE_KEY', '')).strip()
+        for bad in ['\r', '\n', '%0a', '%0A', '%0d', '%0D', ' ']:
+            raw_key = raw_key.replace(bad, '')
+        self.supabase_key = raw_key
+
+        raw_bucket = str(os.environ.get('SUPABASE_BUCKET', 'food-images')).strip()
+        for bad in ['\r', '\n', '%0a', '%0A', '%0d', '%0D', ' ']:
+            raw_bucket = raw_bucket.replace(bad, '')
+        self.bucket = raw_bucket
 
     def _get_headers(self):
         return {
