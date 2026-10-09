@@ -7,6 +7,7 @@ class OrderFood(StatesGroup):
     WaitingForPhone = State()
     ChoosingDeliveryType = State()
     WaitingForLocation = State()
+    WaitingForComment = State()
     ChoosingPaymentType = State()
     WaitingForReceipt = State()
 

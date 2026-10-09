@@ -53,6 +53,7 @@ h1{font-size:24px;font-weight:700}
 <div class="row"><span class="lbl">Holati</span><div>{% if order.status == 'completed' %}<span class="s-done">Tayyorlandi</span>{% elif order.status == 'cancelled' %}<span class="s-cancel">Bekor qilindi</span>{% else %}<span class="s-wait">Kutilmoqda</span>{% endif %}</div></div>
 <div class="row"><span class="lbl">Telefon</span><span class="val">{{ order.phone_number }}</span></div>
 <div class="row"><span class="lbl">Mahsulotlar</span><div class="products">{{ order.total_products }}</div></div>
+{% if order.comment %}<div class="row"><span class="lbl">Izoh (Retsept)</span><div class="val" style="color:#d97706;font-weight:600">💬 {{ order.comment }}</div></div>{% endif %}
 <div class="price-box"><div class="price-lbl">Umumiy summa</div><div class="price-val">{{ order.total_price }} so'm</div></div>
 <div class="row"><span class="lbl">To'lov turi</span><div class="pay">{% if order.payment_type == 'cash' %}Naqd{% else %}Karta{% if order.payment_receipt %} &bull; <a href="javascript:void(0)" onclick="openModal('{{ order.payment_receipt.url }}','{{ order.id }}')" style="color:var(--primary);text-decoration:underline;font-weight:500">Chekni ko'rish</a>{% endif %}{% endif %}</div></div>
 </div>{% endfor %}{% else %}<div class="empty">Tarix bo'sh.</div>{% endif %}

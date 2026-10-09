@@ -3,10 +3,39 @@ from aiogram.types import CallbackQuery, Message, ReplyKeyboardRemove
 from aiogram.fsm.context import FSMContext
 import aiohttp
 from config import API_URL, LOCAL_API_URL
-from keyboards import get_cart_keyboard, get_contact_keyboard, get_location_keyboard, get_payment_type_keyboard, get_delivery_type_keyboard
+from keyboards import (
+    get_cart_keyboard,
+    get_contact_keyboard,
+    get_location_keyboard,
+    get_payment_type_keyboard,
+    get_delivery_type_keyboard,
+    get_comment_keyboard
+)
 from states import OrderFood
 
 router = Router()
+
+def format_products_summary(cart):
+    grouped = {}
+    for item in cart:
+        key = (item.get('id'), item.get('title'), item.get('description', ''))
+        if key not in grouped:
+            grouped[key] = {
+                'title': item.get('title', ''),
+                'description': item.get('description', ''),
+                'count': 0
+            }
+        grouped[key]['count'] += 1
+
+    summary_lines = []
+    for info in grouped.values():
+        line = f"• {info['title']} ({info['count']} ta)"
+        if info['description']:
+            line += f"\n   └ 📝 Tarkibi: {info['description']}"
+        summary_lines.append(line)
+
+    return "\n".join(summary_lines)
+
 
 @router.callback_query(F.data.startswith("cart_add_"))
 async def add_to_cart(callback: CallbackQuery, state: FSMContext):
@@ -22,7 +51,8 @@ async def add_to_cart(callback: CallbackQuery, state: FSMContext):
                 cart.append({
                     "id": dish['id'],
                     "title": dish['title'],
-                    "price": dish['price']
+                    "price": dish['price'],
+                    "description": dish.get('description', '')
                 })
                 await state.update_data(cart=cart)
                 
@@ -52,7 +82,8 @@ async def _show_cart_logic(message: Message, state: FSMContext, is_callback=Fals
     text = "🛒 <b>Savatdagi mahsulotlar:</b>\n\n"
     total_price = 0
     for item in cart:
-        text += f"▪️ {item['title']} - {item['price']} so'm\n"
+        desc_str = f" <i>({item.get('description')})</i>" if item.get('description') else ""
+        text += f"▪️ {item['title']}{desc_str} - {item['price']} so'm\n"
         total_price += item['price']
     
     text += f"\n<b>Jami: {total_price} so'm</b>"
@@ -61,7 +92,7 @@ async def _show_cart_logic(message: Message, state: FSMContext, is_callback=Fals
 
 @router.callback_query(F.data == "cart_clear")
 async def clear_cart(callback: CallbackQuery, state: FSMContext):
-    await state.update_data(cart=[])
+    await state.update_data(cart=[], comment=None)
     await callback.message.edit_text("🗑 Savat tozalandi!")
 
 @router.callback_query(F.data == "order_confirm")
@@ -114,27 +145,51 @@ async def process_phone(message: Message, state: FSMContext):
 async def process_delivery_type(message: Message, state: FSMContext):
     delivery_type_text = message.text
 
+    if delivery_type_text == "⬅️ Ortga":
+        await _show_cart_logic(message, state, is_callback=False)
+        return
+
+    user_data = await state.get_data()
+    has_comment = bool(user_data.get("comment"))
+
     if delivery_type_text == "🚖 Yetkazib berish":
         await state.update_data(delivery_type="Yetkazib berish")
         await message.answer("📍 Iltimos, joylashuvingizni yuboring:", reply_markup=get_location_keyboard())
         await state.set_state(OrderFood.WaitingForLocation)
     elif delivery_type_text == "🏃 Olib ketish":
         await state.update_data(delivery_type="Olib ketish", location="🏃 Olib ketish")
-        await message.answer("💰 To'lov turini tanlang:", reply_markup=get_payment_type_keyboard())
+        msg = "💰 <b>To'lov turini tanlang:</b>"
+        if user_data.get("comment"):
+            msg = f"📝 <b>Sizning izohingiz:</b> <i>{user_data.get('comment')}</i>\n\n" + msg
+        await message.answer(msg, parse_mode="HTML", reply_markup=get_payment_type_keyboard(has_comment=has_comment))
         await state.set_state(OrderFood.ChoosingPaymentType)
     elif delivery_type_text == "🍽 Shu yerda yeyish":
         await state.update_data(delivery_type="Shu yerda yeyish", location="🍽 Shu yerda yeyish")
-        await message.answer("💰 To'lov turini tanlang:", reply_markup=get_payment_type_keyboard())
+        msg = "💰 <b>To'lov turini tanlang:</b>"
+        if user_data.get("comment"):
+            msg = f"📝 <b>Sizning izohingiz:</b> <i>{user_data.get('comment')}</i>\n\n" + msg
+        await message.answer(msg, parse_mode="HTML", reply_markup=get_payment_type_keyboard(has_comment=has_comment))
         await state.set_state(OrderFood.ChoosingPaymentType)
     else:
         await message.answer("Iltimos, buyurtma turini quyidagi tugmalar orqali tanlang:", reply_markup=get_delivery_type_keyboard())
 
 @router.message(OrderFood.WaitingForLocation)
 async def process_location(message: Message, state: FSMContext):
+    if message.text == "⬅️ Ortga":
+        await message.answer("🛵 Buyurtma turini tanlang:", reply_markup=get_delivery_type_keyboard())
+        await state.set_state(OrderFood.ChoosingDeliveryType)
+        return
+
+    user_data = await state.get_data()
+    has_comment = bool(user_data.get("comment"))
+
     if message.location:
         location = f"{message.location.latitude}, {message.location.longitude}"
         await state.update_data(location=location)
-        await message.answer("💰 To'lov turini tanlang:", reply_markup=get_payment_type_keyboard())
+        msg = "💰 <b>To'lov turini tanlang:</b>"
+        if user_data.get("comment"):
+            msg = f"📝 <b>Sizning izohingiz:</b> <i>{user_data.get('comment')}</i>\n\n" + msg
+        await message.answer(msg, parse_mode="HTML", reply_markup=get_payment_type_keyboard(has_comment=has_comment))
         await state.set_state(OrderFood.ChoosingPaymentType)
     else:
         await message.answer(
@@ -143,12 +198,25 @@ async def process_location(message: Message, state: FSMContext):
             reply_markup=get_location_keyboard()
         )
 
-
-
 @router.message(OrderFood.ChoosingPaymentType)
 async def process_payment_type(message: Message, state: FSMContext):
     payment_type = message.text
-    
+
+    if payment_type == "⬅️ Ortga":
+        await message.answer("🛵 Buyurtma turini tanlang:", reply_markup=get_delivery_type_keyboard())
+        await state.set_state(OrderFood.ChoosingDeliveryType)
+        return
+
+    if payment_type in ["💬 Izoh yozish", "✏️ Izohni o'zgartirish"]:
+        await message.answer(
+            "✍️ <b>Buyurtmangiz bo'yicha izoh (eslatma)ni yozing:</b>\n\n"
+            "<i>(Masalan: mahsulot tarkibidan retseptni o'zgartirish, piyoz solmaslik, achchiq qilish va h.k.)</i>",
+            parse_mode="HTML",
+            reply_markup=get_comment_keyboard()
+        )
+        await state.set_state(OrderFood.WaitingForComment)
+        return
+
     if payment_type == "💵 Naqd":
         await create_order(message, state, "cash")
     elif payment_type == "💳 Karta":
@@ -161,9 +229,32 @@ async def process_payment_type(message: Message, state: FSMContext):
             reply_markup=ReplyKeyboardRemove()
         )
         await state.set_state(OrderFood.WaitingForReceipt)
-
     else:
-        await message.answer("Iltimos, to'lov turini tugmalar orqali tanlang.")
+        user_data = await state.get_data()
+        has_comment = bool(user_data.get("comment"))
+        await message.answer("Iltimos, to'lov turini tugmalar orqali tanlang.", reply_markup=get_payment_type_keyboard(has_comment=has_comment))
+
+@router.message(OrderFood.WaitingForComment)
+async def process_comment(message: Message, state: FSMContext):
+    text = message.text
+    user_data = await state.get_data()
+
+    if text == "⬅️ Ortga" or text == "➡️ Izohsiz davom etish":
+        has_comment = bool(user_data.get("comment"))
+        msg = "💰 <b>To'lov turini tanlang:</b>"
+        if user_data.get("comment"):
+            msg = f"📝 <b>Sizning izohingiz:</b> <i>{user_data.get('comment')}</i>\n\n" + msg
+        await message.answer(msg, parse_mode="HTML", reply_markup=get_payment_type_keyboard(has_comment=has_comment))
+        await state.set_state(OrderFood.ChoosingPaymentType)
+        return
+
+    await state.update_data(comment=text)
+    await message.answer(
+        f"✅ <b>Izohingiz saqlandi:</b> <i>{text}</i>\n\n💰 <b>To'lov turini tanlang:</b>",
+        parse_mode="HTML",
+        reply_markup=get_payment_type_keyboard(has_comment=True)
+    )
+    await state.set_state(OrderFood.ChoosingPaymentType)
 
 @router.message(OrderFood.WaitingForReceipt, F.photo)
 async def process_receipt(message: Message, state: FSMContext):
@@ -190,19 +281,19 @@ async def create_order(message: Message, state: FSMContext, payment_type: str, r
     cart = user_data.get("cart", [])
     phone = user_data.get("phone")
     location = user_data.get("location")
+    comment = user_data.get("comment", "")
     
     total_price = sum(item['price'] for item in cart)
-    
-    from collections import Counter
-    product_counts = Counter(item['title'] for item in cart)
-    products_summary = ", ".join([f"{title} {count} ta" for title, count in product_counts.items()])
+    products_summary = format_products_summary(cart)
     
     data = aiohttp.FormData()
     data.add_field('user_id', str(message.from_user.id))
-    data.add_field('phone_number', phone)
+    data.add_field('phone_number', str(phone))
     data.add_field('total_products', products_summary)
     data.add_field('total_price', str(total_price))
     data.add_field('payment_type', payment_type)
+    if comment:
+        data.add_field('comment', comment)
     
     if location:
         try:
@@ -232,6 +323,8 @@ async def create_order(message: Message, state: FSMContext, payment_type: str, r
     summary += f"📞 Telefon: {phone}\n"
     summary += f"📍 Manzil: {location}\n"
     summary += f"💰 To'lov turi: {'Naqd' if payment_type == 'cash' else 'Karta'}\n"
+    if comment:
+        summary += f"💬 Izoh: {comment}\n"
     summary += f"💰 Jami: {total_price} so'm"
     summary += "\n\nTez orada operatorimiz siz bilan bog'lanadi."
 

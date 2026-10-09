@@ -24,7 +24,7 @@ from .models import Order
 class OrderSerializer(serializers.ModelSerializer):
     class Meta:
         model = Order
-        fields = ['id', 'user_id', 'phone_number', 'total_products', 'total_price', 'payment_type', 'payment_receipt', 'location_latitude', 'location_longitude', 'location_text', 'created_at', 'is_active']
+        fields = ['id', 'user_id', 'phone_number', 'total_products', 'total_price', 'payment_type', 'payment_receipt', 'location_latitude', 'location_longitude', 'location_text', 'comment', 'created_at', 'is_active']
 
 from .models import TelegramUser
 

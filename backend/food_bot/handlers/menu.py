@@ -121,7 +121,8 @@ async def handle_web_app_data(message: types.Message, state: FSMContext):
                     cart.append({
                         "id": item['id'],
                         "title": item['title'],
-                        "price": float(item['price'])
+                        "price": float(item['price']),
+                        "description": item.get('description', '')
                     })
             
             await state.update_data(cart=cart)

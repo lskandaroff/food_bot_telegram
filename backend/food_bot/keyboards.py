@@ -60,10 +60,14 @@ def get_main_keyboard():
     return keyboard.as_markup(resize_keyboard=True)
 
 
-def get_payment_type_keyboard():
+def get_payment_type_keyboard(has_comment: bool = False):
     keyboard = ReplyKeyboardBuilder()
     keyboard.button(text="💵 Naqd")
     keyboard.button(text="💳 Karta")
+    comment_btn = "✏️ Izohni o'zgartirish" if has_comment else "💬 Izoh yozish"
+    keyboard.button(text=comment_btn)
+    keyboard.button(text="⬅️ Ortga")
+    keyboard.adjust(2, 1, 1)
     return keyboard.as_markup(resize_keyboard=True, one_time_keyboard=True)
 
 def get_delivery_type_keyboard():
@@ -71,6 +75,14 @@ def get_delivery_type_keyboard():
     keyboard.button(text="🚖 Yetkazib berish")
     keyboard.button(text="🏃 Olib ketish")
     keyboard.button(text="🍽 Shu yerda yeyish")
-    keyboard.adjust(2, 1)
+    keyboard.button(text="⬅️ Ortga")
+    keyboard.adjust(2, 1, 1)
+    return keyboard.as_markup(resize_keyboard=True, one_time_keyboard=True)
+
+def get_comment_keyboard():
+    keyboard = ReplyKeyboardBuilder()
+    keyboard.button(text="➡️ Izohsiz davom etish")
+    keyboard.button(text="⬅️ Ortga")
+    keyboard.adjust(1, 1)
     return keyboard.as_markup(resize_keyboard=True, one_time_keyboard=True)
 

@@ -54,6 +54,8 @@ def send_order_to_admin(order):
             f"💰 <b>Jami:</b> {order.total_price} so'm\n"
             f"💳 <b>To'lov turi:</b> {'Naqd' if order.payment_type == 'cash' else 'Karta'}\n"
         )
+        if order.comment:
+            msg_text += f"💬 <b>Izoh (Retsept):</b> {order.comment}\n"
 
         if order.location_latitude and order.location_longitude:
             maps_link = f"https://www.google.com/maps?q={order.location_latitude},{order.location_longitude}"
@@ -205,9 +207,11 @@ def complete_order(request, order_id):
                     f"🚚 <b>Yangi yetkazib berish!</b>\n\n"
                     f"🔢 Buyurtma: #{order.id}\n"
                     f"📞 Tel: +{order.phone_number}\n"
-                    f"🍔 Mahsulotlar: {order.total_products}\n"
+                    f"🍔 Mahsulotlar:\n{order.total_products}\n"
                     f"💰 Jami: {order.total_price} so'm\n"
                 )
+                if order.comment:
+                    delivery_message += f"💬 Izoh: {order.comment}\n"
                 
                 if order.location_latitude and order.location_longitude:
                     maps_link = f"https://www.google.com/maps?q={order.location_latitude},{order.location_longitude}"

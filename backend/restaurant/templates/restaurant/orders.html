@@ -378,6 +378,13 @@
                         order.total_price }} so'm</span>
                 </div>
 
+                {% if order.comment %}
+                <div class="info-row">
+                    <span class="info-label">Izoh (Retsept)</span>
+                    <div class="info-value" style="color: #d97706; font-weight: 600;">💬 {{ order.comment }}</div>
+                </div>
+                {% endif %}
+
                 <div class="info-row">
                     <span class="info-label">Manzil (📍)</span>
                     <div class="info-value">
@@ -488,6 +495,12 @@
                         <span class="info-label">Umumiy summa</span>
                         <span class="info-value" style="font-size: 18px; color: var(--text-main); font-weight: 700;">${order.total_price} so'm</span>
                     </div>
+
+                    ${order.comment ? `
+                    <div class="info-row">
+                        <span class="info-label">Izoh (Retsept)</span>
+                        <div class="info-value" style="color: #d97706; font-weight: 600;">💬 ${order.comment}</div>
+                    </div>` : ''}
 
                     <div class="info-row">
                         <span class="info-label">To'lov</span>
