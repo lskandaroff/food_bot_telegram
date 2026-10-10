@@ -52,11 +52,10 @@ def get_main_keyboard():
     from config import API_URL
     clean_url = API_URL.rstrip('/')
     keyboard = ReplyKeyboardBuilder()
-    keyboard.button(text="🌐 Saytga kirish", web_app=WebAppInfo(url=f"{clean_url}/api/webapp/"))
-    keyboard.button(text="🍽 Menular")
-    keyboard.button(text="⬅️ Ortga")
+    keyboard.button(text="🍽 Menular", web_app=WebAppInfo(url=f"{clean_url}/api/webapp/"))
     keyboard.button(text="🛒 Savat")
-    keyboard.adjust(2, 2)
+    keyboard.button(text="⬅️ Ortga")
+    keyboard.adjust(1, 2)
     return keyboard.as_markup(resize_keyboard=True)
 
 
