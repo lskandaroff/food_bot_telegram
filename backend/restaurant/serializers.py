@@ -6,7 +6,7 @@ class DishSerializer(serializers.ModelSerializer):
     image = serializers.SerializerMethodField()
     class Meta:
         model = Dish
-        fields = ['id', 'title', 'price', 'description', 'image']
+        fields = ['id', 'title', 'price', 'description', 'image', 'order']
 
     def get_image(self, obj):
         request = self.context.get('request')

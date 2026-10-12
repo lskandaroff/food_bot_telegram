@@ -17,6 +17,12 @@ class Dish(models.Model):
     description = models.TextField(blank=True)  # tarkibi
 
     image = models.ImageField(upload_to='dishes/')
+    order = models.PositiveIntegerField(default=0, verbose_name="Tartib raqami")
+
+    class Meta:
+        ordering = ['order', 'id']
+        verbose_name = "Taom"
+        verbose_name_plural = "Taomlar"
 
     def __str__(self):
         return self.title

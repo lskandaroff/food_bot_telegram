@@ -3,9 +3,11 @@ from .models import Dish, Menu, Order, TelegramUser
 
 @admin.register(Dish)
 class DishAdmin(admin.ModelAdmin):
-    list_display = ('id', 'title', 'menu', 'price')
+    list_display = ('id', 'title', 'menu', 'price', 'order')
+    list_editable = ('order',)
     list_filter = ('menu',)
     search_fields = ('title',)
+    ordering = ('order', 'id')
 
 @admin.register(Menu)
 class MenuAdmin(admin.ModelAdmin):
