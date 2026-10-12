@@ -197,6 +197,7 @@
 
     <script>
         const tg = window.Telegram.WebApp;
+        tg.ready();
         tg.expand(); // Expand to full height
 
         // Colors based on telegram theme
@@ -212,7 +213,8 @@
 
         // Format price
         const formatPrice = (price) => {
-            return new Intl.NumberFormat('uz-UZ').format(price) + " so'm";
+            const num = Math.round(Number(price) || 0);
+            return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ") + " so'm";
         };
 
         // Initialize
@@ -302,17 +304,21 @@
         }
 
         function addToCart(dishId) {
-            const dish = dishes.find(d => d.id === dishId);
+            const dish = dishes.find(d => Number(d.id) === Number(dishId));
             if(!dish) return;
 
             cart[dishId] = {
                 id: dish.id,
                 title: dish.title,
-                price: dish.price,
+                price: Number(dish.price) || 0,
                 description: dish.description || '',
                 quantity: 1
             };
             
+            if (tg.HapticFeedback) {
+                try { tg.HapticFeedback.impactOccurred('light'); } catch(e) {}
+            }
+
             updateDishUI(dishId);
             updateMainButton();
         }
@@ -326,6 +332,10 @@
                 delete cart[dishId];
             }
             
+            if (tg.HapticFeedback) {
+                try { tg.HapticFeedback.impactOccurred('light'); } catch(e) {}
+            }
+
             updateDishUI(dishId);
             updateMainButton();
         }
@@ -359,12 +369,20 @@
             let total = 0;
             let count = 0;
             items.forEach(item => {
-                total += parseFloat(item.price) * item.quantity;
-                count += item.quantity;
+                const qty = Number(item.quantity) || 0;
+                const price = Number(item.price) || 0;
+                total += price * qty;
+                count += qty;
             });
 
-            tg.MainButton.setText(`Savat (${count} ta) - ${formatPrice(total)}`);
-            tg.MainButton.show();
+            const buttonText = `Savat (${count} ta) - ${formatPrice(total)}`;
+            tg.MainButton.setParams({
+                text: buttonText,
+                color: tg.themeParams.button_color || '#50a8eb',
+                text_color: tg.themeParams.button_text_color || '#ffffff',
+                is_active: true,
+                is_visible: true
+            });
         }
 
         // Handle MainButton click
