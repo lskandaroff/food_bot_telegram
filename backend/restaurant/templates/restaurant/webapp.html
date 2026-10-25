@@ -359,9 +359,11 @@
             }
         }
 
+        let mainButtonTimer = null;
         function updateMainButton() {
             const items = Object.values(cart);
             if(items.length === 0) {
+                if (mainButtonTimer) clearTimeout(mainButtonTimer);
                 tg.MainButton.hide();
                 return;
             }
@@ -376,13 +378,21 @@
             });
 
             const buttonText = `Savat (${count} ta) - ${formatPrice(total)}`;
-            tg.MainButton.setParams({
-                text: buttonText,
-                color: tg.themeParams.button_color || '#50a8eb',
-                text_color: tg.themeParams.button_text_color || '#ffffff',
-                is_active: true,
-                is_visible: true
-            });
+            
+            function syncTg() {
+                tg.MainButton.setParams({
+                    text: buttonText,
+                    color: tg.themeParams.button_color || '#50a8eb',
+                    text_color: tg.themeParams.button_text_color || '#ffffff',
+                    is_active: true,
+                    is_visible: true
+                });
+            }
+
+            syncTg();
+
+            if (mainButtonTimer) clearTimeout(mainButtonTimer);
+            mainButtonTimer = setTimeout(syncTg, 80);
         }
 
         // Handle MainButton click

@@ -281,8 +281,14 @@ def orders_history(request):
     return render(request, 'restaurant/history.html', {'orders': orders})
 
 from django.views.decorators.clickjacking import xframe_options_exempt
+from django.views.decorators.cache import never_cache
 
 @xframe_options_exempt
+@never_cache
 def webapp_menu(request):
-    return render(request, 'restaurant/webapp.html')
+    response = render(request, 'restaurant/webapp.html')
+    response['Cache-Control'] = 'no-cache, no-store, must-revalidate, max-age=0'
+    response['Pragma'] = 'no-cache'
+    response['Expires'] = '0'
+    return response
 

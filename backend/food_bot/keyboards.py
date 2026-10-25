@@ -52,7 +52,7 @@ def get_main_keyboard():
     from config import API_URL
     clean_url = API_URL.rstrip('/')
     keyboard = ReplyKeyboardBuilder()
-    keyboard.button(text="🍽 Menular", web_app=WebAppInfo(url=f"{clean_url}/api/webapp/"))
+    keyboard.button(text="🍽 Menular", web_app=WebAppInfo(url=f"{clean_url}/api/webapp/?v=2"))
     keyboard.button(text="🛒 Savat")
     keyboard.button(text="⬅️ Ortga")
     keyboard.adjust(1, 2)
