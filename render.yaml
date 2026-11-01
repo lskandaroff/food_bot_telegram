@@ -23,9 +23,9 @@ services:
       - key: ADMIN_IDS
         value: "6261098836,779171993"
       - key: SUPABASE_URL
-        value: "https://ihechhbcvsnhsqpogpxb.supabase.co"
+        value: "https://gkakyzmxaptmockhgem.supabase.co"
       - key: SUPABASE_KEY
-        value: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImloZWNoaGJjdnNuaHNxcG9ncHhiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTEzNDAyNzgsImV4cCI6MjEwNjkxNjI3OH0.sRvXg18Rt64PUp1-Sp1MAaPqeuw-Ode-s_W_InLr2kA"
+        value: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdrYWt5em1ueGFwdG1vY2toZ2VtIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc5MzU0NzgzNiwiZXhwIjoyMTA5MTIzODM2fQ.YrxVJTCg5rlHUpL0wFmvSpslSJusx6dCj8Q2jfHJwZE"
       - key: SUPABASE_BUCKET
         value: "food-images"
 
