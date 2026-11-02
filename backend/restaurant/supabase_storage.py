@@ -94,7 +94,6 @@ class SupabaseStorage(Storage):
         headers['x-upsert'] = 'true'
 
         try:
-            # Supabase Storage: PUT orqali yuklash (POST ham ishlaydi lekin PUT to'g'riroq)
             resp = requests.post(
                 self._upload_url(unique_name),
                 headers=headers,
@@ -102,22 +101,26 @@ class SupabaseStorage(Storage):
                 timeout=30
             )
 
-            logger.info(f"Supabase upload response: {resp.status_code} | {resp.text[:200]}")
+            logger.info(f"Supabase upload OK: {resp.status_code} | name={unique_name}")
 
             if resp.status_code not in (200, 201):
                 logger.error(
-                    f"Supabase upload failed!\n"
-                    f"  URL: {self._upload_url(unique_name)}\n"
+                    f"Supabase upload FAILED!\n"
                     f"  Status: {resp.status_code}\n"
                     f"  Response: {resp.text}\n"
-                    f"  Bucket: {self.bucket}\n"
-                    f"  Supabase URL: {self.supabase_url}"
+                    f"  Bucket: {self.bucket} | URL: {self.supabase_url}"
                 )
                 raise Exception(
-                    f"Supabase ga yuklashda xato ({resp.status_code}): {resp.text}"
+                    f"Supabase upload xatosi ({resp.status_code}): {resp.text[:300]}"
                 )
+        except requests.exceptions.ConnectionError as e:
+            logger.exception(f"Supabase ulanish xatosi (ConnectionError): {e}")
+            raise Exception(f"Supabase ga ulanib bo'lmadi. URL to'g'riligini tekshiring: {self.supabase_url}")
+        except requests.exceptions.Timeout:
+            logger.error(f"Supabase upload timeout (30s) — bucket: {self.bucket}")
+            raise Exception("Supabase javob bermadi (timeout). Keyinroq urinib ko'ring.")
         except Exception as e:
-            logger.error(f"Supabase upload exception: {e}")
+            logger.exception(f"Supabase upload kutilmagan xato: {e}")
             raise
 
         return unique_name
@@ -132,18 +135,13 @@ class SupabaseStorage(Storage):
         return self._public_url(name_str)
 
     def exists(self, name):
-        """Fayl borligini tekshirish."""
-        if not name:
-            return False
-        name_str = str(name)
-        if name_str.startswith('http'):
-            return True
-        try:
-            headers = self._get_headers()
-            resp = requests.head(self._upload_url(name_str), headers=headers, timeout=5)
-            return resp.status_code == 200
-        except Exception:
-            return False
+        """
+        Supabase da faylning borligini HTTP so'rovsiz tekshirish.
+        Django admin da exists() chaqirilsa HTTP so'rov 500 xatoga olib keladi.
+        False qaytaramiz — Django yangi nom bilan saqlaydi (uuid qo'shilgani uchun)
+        va _save da upsert=true bilan ustiga yozadi.
+        """
+        return False
 
     def delete(self, name):
         """Faylni o'chirish."""
