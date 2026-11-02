@@ -23,7 +23,7 @@ services:
       - key: ADMIN_IDS
         value: "6261098836,779171993"
       - key: SUPABASE_URL
-        value: "https://gkakyzmxaptmockhgem.supabase.co"
+        value: "https://gkakyzmnxaptmockhgem.supabase.co"
       - key: SUPABASE_KEY
         value: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdrYWt5em1ueGFwdG1vY2toZ2VtIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc5MzU0NzgzNiwiZXhwIjoyMTA5MTIzODM2fQ.YrxVJTCg5rlHUpL0wFmvSpslSJusx6dCj8Q2jfHJwZE"
       - key: SUPABASE_BUCKET
