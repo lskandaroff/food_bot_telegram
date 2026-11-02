@@ -292,3 +292,77 @@ def webapp_menu(request):
     response['Expires'] = '0'
     return response
 
+
+import traceback as tb_module
+from django.http import JsonResponse
+
+def debug_dish(request, dish_id):
+    """
+    Vaqtinchalik debug endpoint — /debug/dish/<id>/
+    Dish ma'lumotlari va storage holatini tekshiradi.
+    Muammo topilgandan keyin bu viewni o'chirish kerak.
+    """
+    result = {}
+
+    # 1. Storage tekshiruv
+    try:
+        from restaurant.supabase_storage import SupabaseStorage
+        s = SupabaseStorage()
+        result['storage'] = {
+            'supabase_url': s.supabase_url,
+            'bucket': s.bucket,
+            'key_length': len(s.supabase_key),
+            'key_start': s.supabase_key[:20] + '...',
+        }
+    except Exception as e:
+        result['storage_error'] = str(e)
+        result['storage_traceback'] = tb_module.format_exc()
+
+    # 2. Dish tekshiruv
+    try:
+        from restaurant.models import Dish
+        dish = Dish.objects.get(id=dish_id)
+        result['dish'] = {
+            'id': dish.id,
+            'title': dish.title,
+            'image_name': repr(dish.image.name),
+            'image_name_bool': bool(dish.image.name),
+        }
+    except Dish.DoesNotExist:
+        result['dish_error'] = f'Dish id={dish_id} topilmadi'
+        return JsonResponse(result, status=404)
+    except Exception as e:
+        result['dish_error'] = str(e)
+        result['dish_traceback'] = tb_module.format_exc()
+        return JsonResponse(result, status=500)
+
+    # 3. Image URL tekshiruv
+    try:
+        if dish.image and dish.image.name:
+            url = dish.image.url
+            result['dish']['image_url'] = url
+        else:
+            result['dish']['image_url'] = None
+            result['dish']['image_warning'] = 'Image name bosh yoki None'
+    except Exception as e:
+        result['image_url_error'] = str(e)
+        result['image_url_traceback'] = tb_module.format_exc()
+
+    # 4. Supabase ulanish tekshiruvi
+    try:
+        import requests as req
+        resp = req.get(
+            f"{s.supabase_url}/storage/v1/bucket/{s.bucket}",
+            headers={'apikey': s.supabase_key, 'Authorization': f'Bearer {s.supabase_key}'},
+            timeout=8
+        )
+        result['supabase_connection'] = {
+            'status': resp.status_code,
+            'response': resp.text[:300],
+        }
+    except Exception as e:
+        result['supabase_connection_error'] = str(e)
+
+    result['status'] = 'OK'
+    return JsonResponse(result, json_dumps_params={'indent': 2})
+
