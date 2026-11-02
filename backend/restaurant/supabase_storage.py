@@ -90,7 +90,11 @@ class SupabaseStorage(Storage):
             content.seek(0)
         file_data = content.read()
 
+        # x-upsert: true — fayl mavjud bo'lsa ustiga yozadi (eski nomlar ham ishlaydi)
+        headers['x-upsert'] = 'true'
+
         try:
+            # Supabase Storage: PUT orqali yuklash (POST ham ishlaydi lekin PUT to'g'riroq)
             resp = requests.post(
                 self._upload_url(unique_name),
                 headers=headers,
@@ -98,8 +102,17 @@ class SupabaseStorage(Storage):
                 timeout=30
             )
 
+            logger.info(f"Supabase upload response: {resp.status_code} | {resp.text[:200]}")
+
             if resp.status_code not in (200, 201):
-                logger.error(f"Supabase upload error ({resp.status_code}): {resp.text}")
+                logger.error(
+                    f"Supabase upload failed!\n"
+                    f"  URL: {self._upload_url(unique_name)}\n"
+                    f"  Status: {resp.status_code}\n"
+                    f"  Response: {resp.text}\n"
+                    f"  Bucket: {self.bucket}\n"
+                    f"  Supabase URL: {self.supabase_url}"
+                )
                 raise Exception(
                     f"Supabase ga yuklashda xato ({resp.status_code}): {resp.text}"
                 )
