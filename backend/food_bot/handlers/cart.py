@@ -319,14 +319,13 @@ async def create_order(message: Message, state: FSMContext, payment_type: str, r
         except Exception as e:
             print(f"Error saving order: {e}")
 
-    summary = "✅ Buyurtma qabul qilindi!\n\n"
+    summary = "📨 <b>Buyurtmangiz adminga yuborildi, javobini kuting!</b>\n\n"
     summary += f"📞 Telefon: {phone}\n"
     summary += f"📍 Manzil: {location}\n"
     summary += f"💰 To'lov turi: {'Naqd' if payment_type == 'cash' else 'Karta'}\n"
     if comment:
         summary += f"💬 Izoh: {comment}\n"
     summary += f"💰 Jami: {total_price} so'm"
-    summary += "\n\nTez orada operatorimiz siz bilan bog'lanadi."
 
     from keyboards import get_main_keyboard
     await message.answer(summary, reply_markup=get_main_keyboard())

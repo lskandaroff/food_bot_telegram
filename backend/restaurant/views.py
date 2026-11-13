@@ -66,7 +66,7 @@ def send_order_to_admin(order):
         inline_keyboard = {
             "inline_keyboard": [
                 [
-                    {"text": "✅ Qabul qilish (Tayyor)", "callback_data": f"admin_complete_{order.id}"},
+                    {"text": "✅ Qabul qilish", "callback_data": f"admin_complete_{order.id}"},
                     {"text": "❌ Bekor qilish", "callback_data": f"admin_cancel_{order.id}"}
                 ]
             ]
@@ -193,7 +193,7 @@ def complete_order(request, order_id):
             from food_bot.config import TOKEN, DELIVERY_PERSON_IDS, DELIVERY_PERSON_ID
             
             # Message to customer
-            user_message = f"✅ Buyurtmangiz tayyor bo‘ldi! (Buyurtma #{order.id})"
+            user_message = f"✅ Buyurtmangiz qabul qilindi! Tayyor bo‘lsa, sizga admin xabar beradi. (Buyurtma #{order.id})"
             url_msg = f"https://api.telegram.org/bot{TOKEN}/sendMessage"
             res = requests.post(url_msg, data={"chat_id": order.user_id, "text": user_message}, timeout=10)
             print(f"Telegram sendMessage status: {res.status_code}, response: {res.text}")

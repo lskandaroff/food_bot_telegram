@@ -13,9 +13,9 @@ async def admin_complete_order(callback: CallbackQuery):
         try:
             async with session.post(f"{LOCAL_API_URL}/api/orders/{order_id}/complete/") as resp:
                 if resp.status in [200, 302]:
-                    await callback.answer(f"✅ Buyurtma #{order_id} tayyorlandi!", show_alert=True)
+                    await callback.answer(f"✅ Buyurtma #{order_id} qabul qilindi!", show_alert=True)
                     
-                    status_text = "\n\n✅ <b>HOLAT: Tayyorlandi</b>"
+                    status_text = "\n\n✅ <b>HOLAT: Qabul qilindi</b>"
                     if callback.message.caption:
                         new_caption = callback.message.caption + status_text
                         await callback.message.edit_caption(caption=new_caption, parse_mode="HTML", reply_markup=None)
