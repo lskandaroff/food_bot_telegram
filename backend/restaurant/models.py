@@ -38,6 +38,7 @@ class Order(models.Model):
     )
     STATUS_CHOICES = (
         ('pending', 'Kutilmoqda'),
+        ('accepted', 'Qabul qilindi'),
         ('completed', 'Tayyorlandi'),
         ('cancelled', 'Bekor qilindi'),
     )

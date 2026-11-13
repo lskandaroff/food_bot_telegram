@@ -319,7 +319,7 @@ async def create_order(message: Message, state: FSMContext, payment_type: str, r
         except Exception as e:
             print(f"Error saving order: {e}")
 
-    summary = "📨 <b>Buyurtmangiz adminga yuborildi, javobini kuting!</b>\n\n"
+    summary = "📨 Buyurtmangiz adminga yuborildi, javobini kuting!\n\n"
     summary += f"📞 Telefon: {phone}\n"
     summary += f"📍 Manzil: {location}\n"
     summary += f"💰 To'lov turi: {'Naqd' if payment_type == 'cash' else 'Karta'}\n"

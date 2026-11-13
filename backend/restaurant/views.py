@@ -66,7 +66,10 @@ def send_order_to_admin(order):
         inline_keyboard = {
             "inline_keyboard": [
                 [
-                    {"text": "✅ Qabul qilish", "callback_data": f"admin_complete_{order.id}"},
+                    {"text": "✅ Qabul qilindi", "callback_data": f"admin_accept_{order.id}"},
+                    {"text": "🚀 Tayyor", "callback_data": f"admin_complete_{order.id}"}
+                ],
+                [
                     {"text": "❌ Bekor qilish", "callback_data": f"admin_cancel_{order.id}"}
                 ]
             ]
@@ -181,6 +184,27 @@ def orders_list(request):
     return render(request, 'restaurant/orders.html', {'orders': orders})
 
 @csrf_exempt
+def accept_order(request, order_id):
+    if request.method == 'POST':
+        order = get_object_or_404(Order, pk=order_id)
+        order.status = 'accepted'
+        order.save()
+        
+        # Send Telegram notification to user
+        try:
+            from food_bot.config import TOKEN
+            user_message = f"✅ Buyurtmangiz qabul qilindi! Tayyor bo‘lsa, admin siz bilan bog‘lanadi. (Buyurtma #{order.id})"
+            url_msg = f"https://api.telegram.org/bot{TOKEN}/sendMessage"
+            requests.post(url_msg, data={"chat_id": order.user_id, "text": user_message}, timeout=10)
+        except Exception as e:
+            print(f"Error sending telegram message on accept: {e}")
+            
+        if request.headers.get('Content-Type') == 'application/json' or request.headers.get('Accept') == 'application/json' or request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({'status': 'success', 'order_id': order.id})
+        return redirect('orders_list')
+    return redirect('orders_list')
+
+@csrf_exempt
 def complete_order(request, order_id):
     if request.method == 'POST':
         order = get_object_or_404(Order, pk=order_id)
@@ -193,7 +217,7 @@ def complete_order(request, order_id):
             from food_bot.config import TOKEN, DELIVERY_PERSON_IDS, DELIVERY_PERSON_ID
             
             # Message to customer
-            user_message = f"✅ Buyurtmangiz qabul qilindi! Tayyor bo‘lsa, sizga admin xabar beradi. (Buyurtma #{order.id})"
+            user_message = f"✅ Buyurtmangiz tayyor bo‘ldi! (Buyurtma #{order.id})"
             url_msg = f"https://api.telegram.org/bot{TOKEN}/sendMessage"
             res = requests.post(url_msg, data={"chat_id": order.user_id, "text": user_message}, timeout=10)
             print(f"Telegram sendMessage status: {res.status_code}, response: {res.text}")
