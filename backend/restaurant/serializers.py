@@ -17,7 +17,7 @@ class DishSerializer(serializers.ModelSerializer):
 class MenuSerializer(serializers.ModelSerializer):
     class Meta:
         model = Menu
-        fields = ['id', 'title']
+        fields = ['id', 'title', 'order']
 
 from .models import Order
 

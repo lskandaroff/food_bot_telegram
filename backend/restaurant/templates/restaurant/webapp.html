@@ -122,6 +122,43 @@
             overflow: hidden;
         }
 
+        /* Variant Chips */
+        .variant-chips {
+            display: flex;
+            gap: 4px;
+            margin: 4px 0 8px 0;
+            flex-wrap: wrap;
+        }
+
+        .variant-chip {
+            flex: 1;
+            min-width: 36px;
+            padding: 5px 6px;
+            font-size: 11px;
+            font-weight: 600;
+            border-radius: 8px;
+            border: 1px solid var(--secondary-bg-color, #e2e8f0);
+            background-color: var(--secondary-bg-color, #f1f5f9);
+            color: var(--text-color, #1e293b);
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.15s ease;
+            white-space: nowrap;
+            outline: none;
+            font-family: inherit;
+        }
+
+        .variant-chip:active {
+            transform: scale(0.96);
+        }
+
+        .variant-chip.active {
+            background-color: var(--button-color, #50a8eb);
+            color: var(--button-text-color, #ffffff);
+            border-color: var(--button-color, #50a8eb);
+            box-shadow: 0 2px 6px rgba(80, 168, 235, 0.35);
+        }
+
         .dish-price {
             font-size: 14px;
             font-weight: 700;
@@ -205,6 +242,7 @@
         
         let menus = [];
         let dishes = [];
+        let currentGroupedDishes = [];
         let cart = {}; // format: { dishId: { ...dishData, quantity: 1 } }
 
         // Elements
@@ -270,32 +308,82 @@
                 return;
             }
 
+            // Taomlarni nomi (title) bo'yicha guruhlaymiz (masalan: Peperoni 25, 30, 35 sm)
+            const groupsMap = new Map();
+            currentGroupedDishes = [];
+
             dishes.forEach(dish => {
+                const key = (dish.title || '').trim().toLowerCase();
+                if (!groupsMap.has(key)) {
+                    const group = {
+                        key: key,
+                        title: dish.title.trim(),
+                        image: dish.image,
+                        activeVariantId: dish.id,
+                        variants: [dish]
+                    };
+                    groupsMap.set(key, group);
+                    currentGroupedDishes.push(group);
+                } else {
+                    const group = groupsMap.get(key);
+                    group.variants.push(dish);
+                    if (!group.image && dish.image) {
+                        group.image = dish.image;
+                    }
+                }
+            });
+
+            // Har bir guruh ichidagi variantlarni narx bo'yicha saralash
+            currentGroupedDishes.forEach(group => {
+                group.variants.sort((a, b) => (Number(a.price) || 0) - (Number(b.price) || 0));
+                // Agar savatda birorta varianti bo'lsa, o'shani tanlangan qilamiz, aks holda eng birinchisini
+                const inCartVariant = group.variants.find(v => cart[v.id]);
+                group.activeVariantId = inCartVariant ? inCartVariant.id : group.variants[0].id;
+            });
+
+            currentGroupedDishes.forEach((group, groupIndex) => {
                 const card = document.createElement('div');
                 card.className = 'dish-card';
+                card.id = `dish-card-${groupIndex}`;
                 
-                const imgSrc = dish.image || 'https://via.placeholder.com/150?text=No+Image';
-                const desc = dish.description ? `<p class="dish-desc">${dish.description}</p>` : '';
-                
-                const qty = cart[dish.id] ? cart[dish.id].quantity : 0;
+                const activeDish = group.variants.find(v => v.id === group.activeVariantId) || group.variants[0];
+                const imgSrc = activeDish.image || group.image || 'https://via.placeholder.com/150?text=No+Image';
+                const hasVariants = group.variants.length > 1;
+
+                const qty = cart[activeDish.id] ? cart[activeDish.id].quantity : 0;
                 const addBtnStyle = qty > 0 ? 'display: none;' : 'display: block;';
                 const qtyStyle = qty > 0 ? 'display: flex;' : 'display: none;';
 
+                let variantsHtml = '';
+                if (hasVariants) {
+                    variantsHtml = `
+                        <div class="variant-chips">
+                            ${group.variants.map(v => {
+                                const label = v.description ? v.description : formatPrice(v.price);
+                                const isActive = v.id === activeDish.id ? 'active' : '';
+                                return `<button type="button" class="variant-chip ${isActive}" data-var-id="${v.id}" onclick="selectVariant(${groupIndex}, ${v.id})">${label}</button>`;
+                            }).join('')}
+                        </div>
+                    `;
+                } else if (activeDish.description) {
+                    variantsHtml = `<p class="dish-desc">${activeDish.description}</p>`;
+                }
+
                 card.innerHTML = `
-                    <img src="${imgSrc}" class="dish-img" alt="${dish.title}">
+                    <img src="${imgSrc}" class="dish-img" alt="${group.title}">
                     <div class="dish-info">
-                        <h3 class="dish-title">${dish.title}</h3>
-                        ${desc}
-                        <div class="dish-price">${formatPrice(dish.price)}</div>
+                        <h3 class="dish-title">${group.title}</h3>
+                        ${variantsHtml}
+                        <div class="dish-price" id="price-${groupIndex}">${formatPrice(activeDish.price)}</div>
                         
-                        <div class="add-btn" id="add-btn-${dish.id}" style="${addBtnStyle}" onclick="addToCart(${dish.id})">
+                        <div class="add-btn" id="add-btn-${groupIndex}" style="${addBtnStyle}" onclick="addToCartGroup(${groupIndex})">
                             Qo'shish
                         </div>
                         
-                        <div class="qty-controls" id="qty-ctrl-${dish.id}" style="${qtyStyle}">
-                            <button class="qty-btn" onclick="updateQty(${dish.id}, -1)">-</button>
-                            <span class="qty-text" id="qty-text-${dish.id}">${qty}</span>
-                            <button class="qty-btn" onclick="updateQty(${dish.id}, 1)">+</button>
+                        <div class="qty-controls" id="qty-ctrl-${groupIndex}" style="${qtyStyle}">
+                            <button class="qty-btn" onclick="updateQtyGroup(${groupIndex}, -1)">-</button>
+                            <span class="qty-text" id="qty-text-${groupIndex}">${qty}</span>
+                            <button class="qty-btn" onclick="updateQtyGroup(${groupIndex}, 1)">+</button>
                         </div>
                     </div>
                 `;
@@ -303,53 +391,106 @@
             });
         }
 
-        function addToCart(dishId) {
-            const dish = dishes.find(d => Number(d.id) === Number(dishId));
-            if(!dish) return;
+        function selectVariant(groupIndex, variantId) {
+            const group = currentGroupedDishes[groupIndex];
+            if (!group) return;
 
-            cart[dishId] = {
-                id: dish.id,
-                title: dish.title,
-                price: Number(dish.price) || 0,
-                description: dish.description || '',
+            group.activeVariantId = variantId;
+            const activeDish = group.variants.find(v => v.id === variantId);
+            if (!activeDish) return;
+
+            const card = document.getElementById(`dish-card-${groupIndex}`);
+            if (!card) return;
+
+            // Variant chiplarining active holatini yangilash
+            card.querySelectorAll('.variant-chip').forEach(btn => {
+                if (Number(btn.getAttribute('data-var-id')) === variantId) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+
+            // Rasmni yangilash (agar variant rasmi bo'lsa)
+            const imgEl = card.querySelector('.dish-img');
+            if (imgEl && activeDish.image) {
+                imgEl.src = activeDish.image;
+            }
+
+            // Narxni yangilash
+            const priceEl = document.getElementById(`price-${groupIndex}`);
+            if (priceEl) {
+                priceEl.textContent = formatPrice(activeDish.price);
+            }
+
+            // Tugmalarni ushbu variantning savatdagi miqdoriga moslash
+            updateGroupUI(groupIndex);
+
+            if (tg.HapticFeedback) {
+                try { tg.HapticFeedback.selectionChanged(); } catch(e) {}
+            }
+        }
+
+        function addToCartGroup(groupIndex) {
+            const group = currentGroupedDishes[groupIndex];
+            if (!group) return;
+
+            const activeDish = group.variants.find(v => v.id === group.activeVariantId) || group.variants[0];
+            if (!activeDish) return;
+
+            cart[activeDish.id] = {
+                id: activeDish.id,
+                title: activeDish.title,
+                price: Number(activeDish.price) || 0,
+                description: activeDish.description || '',
                 quantity: 1
             };
-            
+
             if (tg.HapticFeedback) {
                 try { tg.HapticFeedback.impactOccurred('light'); } catch(e) {}
             }
 
-            updateDishUI(dishId);
+            updateGroupUI(groupIndex);
             updateMainButton();
         }
 
-        function updateQty(dishId, delta) {
-            if(!cart[dishId]) return;
-            
-            cart[dishId].quantity += delta;
-            
-            if(cart[dishId].quantity <= 0) {
-                delete cart[dishId];
+        function updateQtyGroup(groupIndex, delta) {
+            const group = currentGroupedDishes[groupIndex];
+            if (!group) return;
+
+            const activeDish = group.variants.find(v => v.id === group.activeVariantId) || group.variants[0];
+            if (!activeDish || !cart[activeDish.id]) return;
+
+            cart[activeDish.id].quantity += delta;
+
+            if (cart[activeDish.id].quantity <= 0) {
+                delete cart[activeDish.id];
             }
-            
+
             if (tg.HapticFeedback) {
                 try { tg.HapticFeedback.impactOccurred('light'); } catch(e) {}
             }
 
-            updateDishUI(dishId);
+            updateGroupUI(groupIndex);
             updateMainButton();
         }
 
-        function updateDishUI(dishId) {
-            const addBtn = document.getElementById(`add-btn-${dishId}`);
-            const qtyCtrl = document.getElementById(`qty-ctrl-${dishId}`);
-            const qtyText = document.getElementById(`qty-text-${dishId}`);
-            
-            if(!addBtn || !qtyCtrl) return; // Might not be currently rendered
+        function updateGroupUI(groupIndex) {
+            const group = currentGroupedDishes[groupIndex];
+            if (!group) return;
 
-            const qty = cart[dishId] ? cart[dishId].quantity : 0;
-            
-            if(qty > 0) {
+            const activeDish = group.variants.find(v => v.id === group.activeVariantId) || group.variants[0];
+            if (!activeDish) return;
+
+            const addBtn = document.getElementById(`add-btn-${groupIndex}`);
+            const qtyCtrl = document.getElementById(`qty-ctrl-${groupIndex}`);
+            const qtyText = document.getElementById(`qty-text-${groupIndex}`);
+
+            if (!addBtn || !qtyCtrl) return;
+
+            const qty = cart[activeDish.id] ? cart[activeDish.id].quantity : 0;
+
+            if (qty > 0) {
                 addBtn.style.display = 'none';
                 qtyCtrl.style.display = 'flex';
                 qtyText.textContent = qty;

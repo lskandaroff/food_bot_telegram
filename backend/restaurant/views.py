@@ -141,7 +141,27 @@ class OrderCreateView(generics.CreateAPIView):
 
 class MenuListView(APIView):
     def get(self, request):
-        menus = Menu.objects.all()
+        try:
+            menus = list(Menu.objects.all().order_by('order', 'id'))
+        except Exception:
+            menus = list(Menu.objects.all().order_by('id'))
+
+        # Agar maxsus tartib berilmagan bo'lsa (0 bo'lsa), Pizza bo'limini Fast food dan keyinga joylashtirish
+        if all(getattr(m, 'order', 0) == 0 for m in menus):
+            fast_food_idx = -1
+            pizza_idx = -1
+            for idx, m in enumerate(menus):
+                title_lower = m.title.lower()
+                if 'fast' in title_lower:
+                    fast_food_idx = idx
+                elif 'pizz' in title_lower:
+                    pizza_idx = idx
+            
+            if pizza_idx != -1 and fast_food_idx != -1 and pizza_idx != fast_food_idx + 1:
+                pizza_item = menus.pop(pizza_idx)
+                new_fast_food_idx = next(i for i, m in enumerate(menus) if 'fast' in m.title.lower())
+                menus.insert(new_fast_food_idx + 1, pizza_item)
+
         serializer = MenuSerializer(menus, many=True, context={'request': request})
         return Response(serializer.data)
 

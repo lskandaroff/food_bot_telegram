@@ -11,8 +11,10 @@ class DishAdmin(admin.ModelAdmin):
 
 @admin.register(Menu)
 class MenuAdmin(admin.ModelAdmin):
-    list_display = ('id', 'title')
+    list_display = ('id', 'title', 'order')
+    list_editable = ('order',)
     search_fields = ('title',)
+    ordering = ('order', 'id')
 
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
