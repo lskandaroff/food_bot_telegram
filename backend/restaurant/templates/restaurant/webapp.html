@@ -242,6 +242,7 @@
         
         let menus = [];
         let dishes = [];
+        let currentMenuId = null;
         let currentGroupedDishes = [];
         let cart = {}; // format: { dishId: { ...dishData, quantity: 1 } }
 
@@ -291,6 +292,7 @@
         }
 
         async function loadDishes(menuId) {
+            currentMenuId = menuId;
             dishesEl.innerHTML = '<div class="loader">Yuklanmoqda...</div>';
             try {
                 const res = await fetch(`/api/menus/${menuId}/dishes/`);
@@ -308,7 +310,108 @@
                 return;
             }
 
-            // Taomlarni nomi (title) bo'yicha guruhlaymiz (masalan: Peperoni 25, 30, 35 sm)
+            const currentMenu = menus.find(m => m.id === currentMenuId);
+            const isPizzaMenu = currentMenu && (currentMenu.title || '').toLowerCase().includes('pizz');
+
+            if (isPizzaMenu) {
+                renderPizzaDishes();
+            } else {
+                renderStandardDishes();
+            }
+        }
+
+        // Oddiy taomlar uchun alohida cardlar (Fast food, Ichimliklar, Shirinliklar va h.k.)
+        function renderStandardDishes() {
+            dishes.forEach(dish => {
+                const card = document.createElement('div');
+                card.className = 'dish-card';
+                card.id = `dish-card-single-${dish.id}`;
+                
+                const imgSrc = dish.image || 'https://via.placeholder.com/150?text=No+Image';
+                const desc = dish.description ? `<p class="dish-desc">${dish.description}</p>` : '';
+                
+                const qty = cart[dish.id] ? cart[dish.id].quantity : 0;
+                const addBtnStyle = qty > 0 ? 'display: none;' : 'display: block;';
+                const qtyStyle = qty > 0 ? 'display: flex;' : 'display: none;';
+
+                card.innerHTML = `
+                    <img src="${imgSrc}" class="dish-img" alt="${dish.title}">
+                    <div class="dish-info">
+                        <h3 class="dish-title">${dish.title}</h3>
+                        ${desc}
+                        <div class="dish-price">${formatPrice(dish.price)}</div>
+                        
+                        <div class="add-btn" id="add-btn-single-${dish.id}" style="${addBtnStyle}" onclick="addToCartSingle(${dish.id})">
+                            Qo'shish
+                        </div>
+                        
+                        <div class="qty-controls" id="qty-ctrl-single-${dish.id}" style="${qtyStyle}">
+                            <button class="qty-btn" onclick="updateQtySingle(${dish.id}, -1)">-</button>
+                            <span class="qty-text" id="qty-text-single-${dish.id}">${qty}</span>
+                            <button class="qty-btn" onclick="updateQtySingle(${dish.id}, 1)">+</button>
+                        </div>
+                    </div>
+                `;
+                dishesEl.appendChild(card);
+            });
+        }
+
+        function addToCartSingle(dishId) {
+            const dish = dishes.find(d => Number(d.id) === Number(dishId));
+            if (!dish) return;
+
+            cart[dishId] = {
+                id: dish.id,
+                title: dish.title,
+                price: Number(dish.price) || 0,
+                description: dish.description || '',
+                quantity: 1
+            };
+
+            if (tg.HapticFeedback) {
+                try { tg.HapticFeedback.impactOccurred('light'); } catch(e) {}
+            }
+
+            updateSingleDishUI(dishId);
+            updateMainButton();
+        }
+
+        function updateQtySingle(dishId, delta) {
+            if (!cart[dishId]) return;
+
+            cart[dishId].quantity += delta;
+            if (cart[dishId].quantity <= 0) {
+                delete cart[dishId];
+            }
+
+            if (tg.HapticFeedback) {
+                try { tg.HapticFeedback.impactOccurred('light'); } catch(e) {}
+            }
+
+            updateSingleDishUI(dishId);
+            updateMainButton();
+        }
+
+        function updateSingleDishUI(dishId) {
+            const addBtn = document.getElementById(`add-btn-single-${dishId}`);
+            const qtyCtrl = document.getElementById(`qty-ctrl-single-${dishId}`);
+            const qtyText = document.getElementById(`qty-text-single-${dishId}`);
+
+            if (!addBtn || !qtyCtrl) return;
+
+            const qty = cart[dishId] ? cart[dishId].quantity : 0;
+            if (qty > 0) {
+                addBtn.style.display = 'none';
+                qtyCtrl.style.display = 'flex';
+                qtyText.textContent = qty;
+            } else {
+                addBtn.style.display = 'block';
+                qtyCtrl.style.display = 'none';
+            }
+        }
+
+        // Faqat Pizza bo'limi uchun bitta cardda o'lchamlar (25, 30, 35 sm) bilan chiqarish
+        function renderPizzaDishes() {
             const groupsMap = new Map();
             currentGroupedDishes = [];
 
